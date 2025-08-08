@@ -33,6 +33,7 @@ async def process_btn_create_wishlist(callback: CallbackQuery, i18n: dict[str, s
 @router.callback_query(StateFilter(FSMNewWishList.fill_title_list))
 async def process_title_sent(callback: CallbackQuery, i18n: dict[str, str], state: FSMContext):
     keyboard = create_inline_kb(1, i18n, cancel_wishlist_creation='cancel_wishlist_creation')
+    await state.update_data(title=callback.message.text)
     await callback.message.edit_text(
         text=i18n.get('create_wishlist_description'),
         reply_markup=keyboard
@@ -40,21 +41,23 @@ async def process_title_sent(callback: CallbackQuery, i18n: dict[str, str], stat
     await state.set_state(FSMNewWishList.fill_description_list)
 
 
-@router.callback_query(StateFilter(FSMNewWishList.fill_title_list))
+@router.callback_query(StateFilter(FSMNewWishList.fill_description_list))
 async def process_title_sent(callback: CallbackQuery, i18n: dict[str, str], state: FSMContext):
     keyboard = create_inline_kb(1, i18n, cancel_wishlist_creation='cancel_wishlist_creation')
-    await callback.message.edit_text(
-        text=i18n.get('create_wishlist_description'),
-        reply_markup=keyboard
-    )
-    await state.set_state(FSMNewWishList.fill_description_list)
-
-
-@router.callback_query(StateFilter(FSMNewWishList.fill_title_list))
-async def process_title_sent(callback: CallbackQuery, i18n: dict[str, str], state: FSMContext):
-    keyboard = create_inline_kb(1, i18n, cancel_wishlist_creation='cancel_wishlist_creation')
+    await state.update_data(description=callback.message.text)
     await callback.message.edit_text(
         text=i18n.get('create_wishlist_date'),
         reply_markup=keyboard
     )
     await state.set_state(FSMNewWishList.fill_date)
+
+
+@router.callback_query(StateFilter(FSMNewWishList.fill_date))
+async def process_title_sent(callback: CallbackQuery, i18n: dict[str, str], state: FSMContext):
+    keyboard = create_inline_kb(1, i18n)
+    await state.update_data(date=callback.message.text)
+    await callback.message.edit_text(
+        text=i18n.get('wishlist_created'),
+        reply_markup=keyboard
+    )
+    await state.clear()
