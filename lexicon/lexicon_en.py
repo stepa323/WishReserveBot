@@ -1,53 +1,71 @@
 LEXICON_EN = {
     '/start': '''🌟 <b>Welcome to WishReserveBot!</b> 🌟
 
-🎁 Create wish lists for any occasion - birthdays, holidays or just because! 
-🔒 Your friends can secretly reserve gifts, keeping the surprise intact.
+🎁 Create perfect wish lists for any occasion! 
+🔒 Let friends secretly reserve gifts without spoiling surprises.
 
-Let's make gift-giving magical! ✨''',
+Start your gifting journey now! ✨''',
 
-    '/help': '''🆘 <b>Need help?</b>
+    '/help': '''🆘 <b>Need assistance?</b>
 
-We're here for you! Contact our support team for any questions or suggestions.''',
-    'start_menu': '🏠 Main menu',
-    'btn_start': '🚀 Get Started',
-    'btn_support': '💬 Contact Support',
-    'btn_go_back': '🔙 Back',
-    'btn_my_wishlists': '📋 My Wish Lists',
+Our support team is available 24/7 to help you.''',
+
+    'start_menu': '🏠 Main Menu',
+    'btn_start': '🚀 Begin',
+    'btn_support': '💬 Support',
+    'btn_go_back': '↩ Back',
+    'btn_my_wishlists': '📋 My Wishlists',
     'btn_friends_wishlists': "👯 Friends' Lists",
-    'btn_help': '❓ Help',
-    'btn_create_wishlist': '✨ Create New List',
+    'btn_help': '❓ Help Center',
+    'btn_create_wishlist': '➕ New Wishlist',
 
-    'my_wishlists_if_none': '''📭 <b>No wish lists yet</b>
+    'my_wishlists_if_none': '''📭 <b>No wishlists yet</b>
 
-Your gift dreams start here! Create your first list in just a few taps.''',
+Let's create your first wishlist - it takes just a minute!''',
 
-    'my_wishlists': '''📚 <b>Your Wish Lists</b>
+    'my_wishlists': '''📚 <b>Your Wishlists</b>
 
-Tap any list to edit or share with friends!''',
+Tap to manage or share with friends''',
 
-    'friends_wishlists_if_none': '''👀 <b>No friends' lists yet</b>
+    'friends_wishlists_if_none': '''👀 <b>No lists available</b>
 
-Ask friends to share their lists with you, or help them create their first wish list!''',
+Ask friends to share their wishlists with you''',
 
-    'friends_wishlists': '''🎯 <b>Friends' Wish Lists</b>
+    'friends_wishlists': '''🎯 <b>Friends' Wishlists</b>
 
-Reserve gifts secretly and make their day special! Don't see a list? Ask your friend to share it.''',
-    'create_wishlist_title': '📝 Enter wishlist title:',
-    'create_wishlist_description': '✏️ Add description (optional):',
-    'create_wishlist_date': '📅 Add event date (if needed):',
-    'add_item_name': '🎁 Enter gift name:',
-    'add_item_description': '📌 Add gift description:',
-    'add_item_photo': '📷 Add photo of the item (optional):',
-    'add_item_price': '💵 Enter approximate price:',
-    'add_item_link': '🔗 Add product link (if available):',
-    'add_item_priority': '⭐ Select priority:',
+Reserve gifts secretly and make their day!''',
+
+    'create_wishlist_title': '✏️ Enter wishlist title (4-50 chars):',
+    'create_wishlist_description': '📝 Add description (optional, /skip to bypass):',
+    'create_wishlist_date': '📅 Event date (DD.MM.YYYY or /skip):',
+    'wishlist_created': '''✅ <b>Wishlist created successfully!</b>
+
+🎯 <b>Title:</b> {title}
+📝 <b>Description:</b> {description}
+📅 <b>Date:</b> {date}''',
+    'cancel_wishlist_creation': '❌ Cancel',
+    'not_specified': 'Not specified',
+    'canceled_wishlist_creation': 'ℹ️ Creation canceled',
+
+    # Item creation flow
+    'add_item_name': '🎁 Item name:',
+    'add_item_description': '📌 Description (optional):',
+    'add_item_photo': '📸 Photo (optional):',
+    'add_item_price': '💲 Approximate price:',
+    'add_item_link': '🔗 Product link (optional):',
+    'add_item_priority': '⭐ Priority level:',
+
     'priority_options': {
-        'high': 'Really want this!',
-        'medium': 'Would be nice',
+        'high': 'Top priority',
+        'medium': 'Nice to have',
         'low': 'If possible'
     },
-    'wishlist_created': '✅ Wishlist created successfully!',
-    'cancel_wishlist_creation': '❌ Cancel wishlist creation',
+
+    # Validation messages
+    'invalid_title_length': "⚠ Title must be 4-50 characters",
+    'invalid_description_length': "⚠ Description exceeds 300 chars",
+    'empty_date_error': "⚠ Please enter date",
+    'invalid_date_format': "⚠ Use DD.MM.YYYY format",
+    'date_in_past_error': "⚠ Date cannot be past",
 
 }

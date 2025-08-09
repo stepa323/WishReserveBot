@@ -39,17 +39,20 @@ async def main():
     )
     dp = Dispatcher(storage=storage)
 
-    logger.info('Подключаем роутеры')
+    logger.info('Connecting routers')
 
     dp.include_router(user.router)
     dp.include_router(wishlists_forms.router)
 
-    logger.info('Подключаем миддлвари')
+    logger.info('Connecting middleware')
 
     dp.update.middleware(TranslatorMiddleware())
 
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot, translations=translations)
 
-
-asyncio.run(main())
+if __name__ == "__main__":
+    try:
+        asyncio.run(main())
+    except KeyboardInterrupt:
+        logger.info('Bot stopped')
