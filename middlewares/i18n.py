@@ -1,11 +1,10 @@
-from abc import ABC
 from typing import Callable, Any, Awaitable
 
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject, User
 
 
-class TranslatorMiddleware(BaseMiddleware, ABC):
+class TranslatorMiddleware(BaseMiddleware):
     async def __call__(
         self,
         handler: Callable[[TelegramObject, dict[str, Any]], Awaitable[Any]],
