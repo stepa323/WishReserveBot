@@ -12,9 +12,8 @@ from lexicon.lexicon_en import LEXICON_EN
 from lexicon.lexicon_ru import LEXICON_RU
 
 from middlewares.i18n import TranslatorMiddleware
-from middlewares.database import DatabaseMiddleware
 
-from database.connection import DatabaseConnection
+from database.models import async_main
 
 logger = logging.getLogger(__name__)
 
@@ -33,10 +32,6 @@ async def main():
     logger.info('Starting bot')
 
     config: Config = load_config()
-
-    db_conn = DatabaseConnection(config.db.url)
-    db_conn.connect()
-    await db_conn.create_tables()
     
     storage = MemoryStorage()
 
@@ -53,11 +48,17 @@ async def main():
 
     logger.info('Connecting middleware')
 
-    dp.update.middleware(DatabaseMiddleware(db_conn))
     dp.update.middleware(TranslatorMiddleware())
+
+    logger.info('Init database')
+
+    dp.startup.register(startup)
 
     await bot.delete_webhook(drop_pending_updates=True)
     await dp.start_polling(bot, translations=translations)
+
+async def startup(dispatcher: Dispatcher):
+    await async_main()
 
 if __name__ == "__main__":
     try:
