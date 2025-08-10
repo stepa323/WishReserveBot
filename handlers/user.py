@@ -34,7 +34,7 @@ async def process_start_message(message: Message, i18n: dict[str, str]):
         reply_markup=keyboard
     )
     await message.answer(
-        text=f"id:{user.id}, username: @{user.username}"
+        text=f"id:{user.id},tg_id:{user.telegram_id}, username: @{user.username}"
     )
 
 # Handler for returning to start menu via callback
