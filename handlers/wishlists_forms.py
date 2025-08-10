@@ -10,6 +10,8 @@ from handlers.handlers_utils import process_invalid_input, edit_last_msg, valida
 from keyboards.keyboard_utils import create_inline_kb
 from states.states import FSMNewWishList
 
+from database.requests import get_or_create_user, get_wishlists, create_or_update_wishlist
+
 router = Router()
 
 
