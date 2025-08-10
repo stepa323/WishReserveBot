@@ -13,6 +13,8 @@ from lexicon.lexicon_ru import LEXICON_RU
 
 from middlewares.i18n import TranslatorMiddleware
 
+from database.connection import DatabaseConnection
+
 logger = logging.getLogger(__name__)
 
 translations = {
