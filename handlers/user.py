@@ -135,6 +135,7 @@ async def view_wishlist(callback: CallbackQuery, i18n: dict[str, str]):
 
         # Format wishlist details
         text_parts = [
+            f"=============================="
             f"📌 <b>{wishlist.title}</b>",
             f"👤 {i18n.get('created_by')}: @{wishlist.owner.username}"
         ]
@@ -197,7 +198,3 @@ async def process_help_command(message: Message, i18n: dict[str, str]):
         reply_markup=keyboard
     )
 
-
-@router.callback_query()
-async def others(callback: CallbackQuery):
-    await callback.answer(callback.data)
