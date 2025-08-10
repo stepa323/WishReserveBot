@@ -3,15 +3,15 @@ from aiogram.filters import CommandStart, Command, StateFilter
 from aiogram.fsm.state import default_state
 from aiogram.types import Message, CallbackQuery
 from keyboards.keyboard_utils import create_inline_kb
-from database.db import Database
-from database.models import User, Wishlist, Item 
+
+from database.requests import get_or_create_user
 
 # Initialize router for handling messages and callbacks
 router = Router()
 
 # Handler for /start command (only in default state)
 @router.message(CommandStart(), StateFilter(default_state))
-async def process_start_message(message: Message, i18n: dict[str, str], db: Database):
+async def process_start_message(message: Message, i18n: dict[str, str]):
     """
     Handles the /start command by sending a welcome message with interactive buttons.
     
@@ -23,7 +23,7 @@ async def process_start_message(message: Message, i18n: dict[str, str], db: Data
     keyboard = create_inline_kb(2, i18n, 'btn_my_wishlists', 'btn_friends_wishlists', 'btn_help')
 
     # Get or create user
-    user = await db.get_or_create_user(
+    user = await get_or_create_user(
         telegram_id=message.from_user.id,
         username=message.from_user.username
     )
