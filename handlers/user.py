@@ -3,7 +3,7 @@ from aiogram.filters import CommandStart, Command, StateFilter
 from aiogram.fsm.state import default_state
 from aiogram.types import Message, CallbackQuery
 from keyboards.keyboard_utils import create_inline_kb
-from datebase.db import Database
+from database.db import Database
 from database.models import User, Wishlist, Item 
 
 # Initialize router for handling messages and callbacks
