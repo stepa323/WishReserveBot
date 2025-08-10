@@ -4,7 +4,7 @@ from aiogram.fsm.state import default_state
 from aiogram.types import Message, CallbackQuery
 from keyboards.keyboard_utils import create_inline_kb
 
-from database.requests import get_or_create_user
+from database.requests import get_or_create_user, get_wishlists, create_or_update_wishlist
 
 # Initialize router for handling messages and callbacks
 router = Router()
@@ -59,65 +59,104 @@ async def process_start_message(callback: CallbackQuery, i18n: dict[str, str]):
         reply_markup=keyboard
     )
 
-# Handler for "My Wishlists" button click
 @router.callback_query(F.data == 'btn_my_wishlists', StateFilter(default_state))
 async def process_btn_my_wishlist_click(callback: CallbackQuery, i18n: dict[str, str]):
     """
-    Displays user's wishlists or empty state if none exist.
-    
-    Args:
-        callback: The callback query object 
-        i18n: Dictionary containing localized strings
+    Displays user's wishlists with interactive buttons or empty state if none exist.
     """
-    # TODO: Fetch actual wishlists from database
-    wishlists = False  # Placeholder for actual data
-
+    user_id = callback.from_user.id
+    wishlists = await get_wishlists(user_id)
+    
     await callback.answer()  # Acknowledge callback
     
-    # Create keyboard with "Create Wishlist" and back button
-    keyboard = create_inline_kb(1, i18n, 'btn_create_wishlist', start_menu='btn_go_back')
+    keyboard = InlineKeyboardBuilder()
     
-    # Show appropriate message based on whether wishlists exist
     if not wishlists:
+        # Empty state
+        keyboard.button(
+            text=i18n['btn_create_wishlist'],
+            callback_data='create_wishlist'
+        )
+        keyboard.button(
+            text=i18n['btn_go_back'],
+            callback_data='start_menu'
+        )
         await callback.message.edit_text(
-            text=i18n.get('my_wishlists_if_none'),  # Empty state message
-            reply_markup=keyboard
+            text=i18n['my_wishlists_if_none'],
+            reply_markup=keyboard.as_markup()
         )
     else:
+        # Display wishlists with pagination
+        for wishlist in wishlists:
+            keyboard.row(
+                InlineKeyboardButton(
+                    text=f"🎁 {wishlist.title}",
+                    callback_data=f"view_wishlist_{wishlist.id}"
+                )
+            )
+        
+        # Add action buttons at the bottom
+        keyboard.row(
+            InlineKeyboardButton(
+                text=i18n['btn_create_wishlist'],
+                callback_data='create_wishlist'
+            ),
+            InlineKeyboardButton(
+                text=i18n['btn_go_back'],
+                callback_data='start_menu'
+            )
+        )
+        
+        wishlists_count = len(wishlists)
         await callback.message.edit_text(
-            text=i18n.get('my_wishlists'),  # Message with wishlists
-            reply_markup=keyboard
+            text=i18n['my_wishlists'].format(count=wishlists_count),
+            reply_markup=keyboard.as_markup()
         )
 
-# Handler for "Friends' Wishlists" button click  
+
 @router.callback_query(F.data == 'btn_friends_wishlists', StateFilter(default_state))
 async def process_btn_friends_wishlists(callback: CallbackQuery, i18n: dict[str, str]):
     """
-    Displays friends' wishlists or empty state if none exist.
-    
-    Args:
-        callback: The callback query object
-        i18n: Dictionary containing localized strings
+    Displays friends' wishlists with sharing status or empty state.
     """
-    # TODO: Fetch actual friends' wishlists from database
-    wishlists = False  # Placeholder for actual data
-
+    user_id = callback.from_user.id
+    friends_wishlists = await get_friends_wishlists(user_id)  # Нужно реализовать эту функцию
+    
     await callback.answer()
     
-    # Create keyboard with just back button
-    keyboard = create_inline_kb(1, i18n, start_menu='btn_go_back')
+    keyboard = InlineKeyboardBuilder()
     
-    # Show appropriate message based on data availability
-    if not wishlists:
+    if not friends_wishlists:
+        keyboard.button(
+            text=i18n['btn_go_back'],
+            callback_data='start_menu'
+        )
         await callback.message.edit_text(
-            text=i18n.get('friends_wishlists_if_none'),
-            reply_markup=keyboard
+            text=i18n['friends_wishlists_if_none'],
+            reply_markup=keyboard.as_markup()
         )
     else:
-        await callback.message.edit_text(
-            text=i18n.get('friends_wishlists'),
-            reply_markup=keyboard
+        for wishlist in friends_wishlists:
+            friend_name = wishlist.owner.username or f"Friend #{wishlist.owner.id}"
+            keyboard.row(
+                InlineKeyboardButton(
+                    text=f"👤 {friend_name}: {wishlist.title}",
+                    callback_data=f"view_friend_wishlist_{wishlist.id}"
+                )
+            )
+        
+        keyboard.row(
+            InlineKeyboardButton(
+                text=i18n['btn_go_back'],
+                callback_data='start_menu'
+            )
         )
+        
+        await callback.message.edit_text(
+            text=i18n['friends_wishlists'].format(count=len(friends_wishlists)),
+            reply_markup=keyboard.as_markup()
+        )
+
 
 # Handler for "Help" button click
 @router.callback_query(F.data == 'btn_help', StateFilter(default_state))
