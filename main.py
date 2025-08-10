@@ -12,6 +12,7 @@ from lexicon.lexicon_en import LEXICON_EN
 from lexicon.lexicon_ru import LEXICON_RU
 
 from middlewares.i18n import TranslatorMiddleware
+from middlewares.database import DatabaseMiddleware
 
 from database.connection import DatabaseConnection
 
