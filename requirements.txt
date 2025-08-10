@@ -10,3 +10,4 @@ aiosqlite==0.19.0  # Для SQLite
 python-multipart==0.0.6  # Для работы с формами
 python-dateutil==2.9.0  # Для работы с датами
 pytz==2024.1  # Часовые пояса
+aiosqlite==0.19.0
