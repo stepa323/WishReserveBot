@@ -7,7 +7,7 @@ from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_
 
 engine = create_async_engine(url='sqlite+aiosqlite:///db.sqlite3', echo=True)
 
-async session = async_sessionmaker(engine)
+async_session = async_sessionmaker(engine)
 
 class Base(AsyncAttrs, DeclarativeBase):
     pass
@@ -81,3 +81,4 @@ class Item(Base):
 async def async_main():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
