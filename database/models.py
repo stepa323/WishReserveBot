@@ -10,7 +10,8 @@ engine = create_async_engine(url='sqlite+aiosqlite:///db.sqlite3', echo=True)
 async_session = async_sessionmaker(engine)
 
 class Base(AsyncAttrs, DeclarativeBase):
-    pass
+    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
+    updated_at = Column(DateTime, onupdate=datetime.utcnow)
 
 class PriorityLevel(PyEnum):
     """Priority levels for wishlist items with consistent naming"""
@@ -25,8 +26,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     telegram_id = Column(Integer, unique=True, index=True, nullable=False)
     username = Column(String(50))
-    created_at = Column(DateTime, default=datetime.utcnow, nullable=False)
-    updated_at = Column(DateTime, onupdate=datetime.utcnow)
+    
     
     wishlists = relationship("Wishlist", back_populates="owner", cascade="all, delete-orphan")
 
@@ -81,4 +81,5 @@ class Item(Base):
 async def async_main():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+
 
