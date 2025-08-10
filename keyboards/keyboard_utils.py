@@ -14,14 +14,20 @@ def create_inline_kb(
 
     if args:
         for button in args:
+            if button in i18n.keys():
+                text = i18n.get(button)
+            else:
+                text=button
             buttons.append(InlineKeyboardButton(
-                text=i18n.get(button),
+                text=text,
                 callback_data=button
             ))
     if kwargs:
         for button, text in kwargs.items():
+            if text in i18n.keys():
+                text = i18n.get(text)
             buttons.append(InlineKeyboardButton(
-                text=i18n.get(text),
+                text=text,
                 callback_data=button
             ))
 
