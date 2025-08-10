@@ -68,4 +68,13 @@ Reserve gifts secretly and make their day!''',
     'invalid_date_format': "⚠ Use DD.MM.YYYY format",
     'date_in_past_error': "⚠ Date cannot be past",
 
+    'created_by': "Created by",
+    'description': "Description",
+    'event_date': "Event date",
+    'wishlist_items': "Items in wishlist",
+    'no_items_in_wishlist': "No items in this wishlist yet",
+    'wishlist_not_found': "Wishlist not found",
+    'btn_add_item': "➕ Add item",
+    'btn_edit_wishlist': "✏️ Edit",
+    'btn_share_wishlist': "🔗 Share",
 }

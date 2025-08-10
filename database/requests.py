@@ -81,9 +81,7 @@ async def create_or_update_wishlist(
         if title is None:
             raise ValueError("Title is required for new wishlist")
 
-        user = await session.scalar(select(User).where(User.telegram_id == user_id))
-        if not user:
-            raise ValueError(f"User with telegram_id {user_id} not found")
+        user: User = await get_or_create_user(user_id)
 
         wishlist = Wishlist(
             title=title,
@@ -95,4 +93,32 @@ async def create_or_update_wishlist(
         session.add(wishlist)
         await session.commit()
         await session.refresh(wishlist)
+        return wishlist
+
+
+async def get_wishlist(
+        wishlist_id: int,
+        *,
+        with_owner: bool = False,
+        with_items: bool = False
+) -> Optional[Wishlist]:
+    """
+    Retrieve a single wishlist by ID with optional relationships
+
+    :param wishlist_id: ID of the wishlist to retrieve
+    :param with_owner: Whether to load the owner relationship
+    :param with_items: Whether to load the items relationship
+    :return: Wishlist object if found, None otherwise
+    """
+    async with async_session() as session:
+        query = select(Wishlist).where(Wishlist.id == wishlist_id)
+
+        if with_owner:
+            query = query.options(joinedload(Wishlist.owner))
+        if with_items:
+            query = query.options(selectinload(Wishlist.items))
+
+        result = await session.execute(query)
+        wishlist = result.scalars().unique().first()
+
         return wishlist
