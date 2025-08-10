@@ -31,5 +31,8 @@ class DatabaseConnection:
 
     async def get_session(self):
         """Database session generator"""
-        async with self.SessionLocal() as session:
+        session = self.SessionLocal()
+        try:
             yield session
+        finally:
+            await session.close()
