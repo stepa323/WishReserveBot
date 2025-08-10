@@ -17,6 +17,9 @@ router = Router()
 @router.callback_query(F.data == 'cancel_wishlist_creation', ~StateFilter(default_state))
 async def process_cancel_command(callback: CallbackQuery, i18n: dict[str, str], state: FSMContext):
     keyboard = create_inline_kb(1, i18n, 'start_menu', 'btn_my_wishlists')
+    
+    await callback.answer()
+    
     await callback.message.edit_text(
         text=i18n.get('canceled_wishlist_creation'),
         reply_markup=keyboard
