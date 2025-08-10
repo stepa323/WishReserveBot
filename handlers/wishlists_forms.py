@@ -79,25 +79,51 @@ async def process_description_sent(message: Message, i18n: dict[str, str], state
 # 3 step
 @router.message(StateFilter(FSMNewWishList.fill_date))
 async def process_date_sent(message: Message, i18n: dict[str, str], state: FSMContext):
-    keyboard = create_inline_kb(1, i18n,'start_menu', 'btn_my_wishlists')
+    keyboard = create_inline_kb(1, i18n, 'start_menu', 'btn_my_wishlists')
     date_str = message.text.strip()
 
-    # validating input
+
     if not await validate_date_input(date_str, message, i18n):
         return
-    else:
-        if date_str == '/skip':
-            date_str = ''
+        
+    try:
         state_data = await state.get_data()
         last_message_id = state_data.get('last_message_id')
+        user_id = message.from_user.id
+        
+        event_date = None
+        if date_str and date_str != '/skip':
+            event_date = datetime.strptime(date_str, "%d.%m.%Y")
 
-        success_message = i18n['wishlist_created'].format(
-            title=state_data.get('title', i18n.get('not_specified', 'Not specified')),
-            description=state_data.get('description', i18n.get('not_specified', 'Not specified')),
-            date=date_str if date_str else i18n.get('not_specified', 'Not specified')
+
+        wishlist = await create_or_update_wishlist(
+            user_id=user_id,
+            title=state_data.get('title', ''),
+            description=state_data.get('description', ''),
+            event_date=event_date
         )
 
-        await edit_last_msg(last_message_id, state, date_str, message, i18n, keyboard, 'description',
-                            success_message)
+        success_message = i18n['wishlist_created'].format(
+            title=wishlist.title or i18n.get('not_specified'),
+            description=wishlist.description or i18n.get('not_specified'),
+            date=date_str if date_str else i18n.get('not_specified')
+        )
+
+        await edit_last_msg(
+            last_message_id, 
+            state, 
+            date_str, 
+            message, 
+            i18n, 
+            keyboard, 
+            'description',
+            success_message
+        )
 
         await state.clear()
+
+    except ValueError as e:
+        await message.answer(i18n['error_occurred'].format(error=str(e)))
+    except Exception as e:
+        logging.error(f"Error creating wishlist: {e}")
+        await message.answer(i18n['database_error'])
