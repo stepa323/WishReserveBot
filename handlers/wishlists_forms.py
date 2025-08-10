@@ -14,7 +14,7 @@ router = Router()
 
 
 # Exit from states machine
-@router.callback_query(F.data == 'cancel_wishlist_creation', ~StateFilter(default_state))
+@router.callback_query(F.data == 'btn_my_wishlists', ~StateFilter(default_state))
 async def process_cancel_command(callback: CallbackQuery, i18n: dict[str, str], state: FSMContext):
     await callback.answer(text=i18n.get('canceled_wishlist_creation'), show_alert=True)
     
@@ -24,7 +24,7 @@ async def process_cancel_command(callback: CallbackQuery, i18n: dict[str, str], 
 # 0 step of creating wishlist
 @router.callback_query(F.data == 'btn_create_wishlist', StateFilter(default_state))
 async def process_btn_create_wishlist(callback: CallbackQuery, i18n: dict[str, str], state: FSMContext):
-    keyboard = create_inline_kb(1, i18n, start_menu='cancel_wishlist_creation')
+    keyboard = create_inline_kb(1, i18n, btn_my_wishlists='cancel_wishlist_creation')
     
     await callback.answer()
     
@@ -40,7 +40,7 @@ async def process_btn_create_wishlist(callback: CallbackQuery, i18n: dict[str, s
 # 1 step of creating wishlist and handling input
 @router.message(StateFilter(FSMNewWishList.fill_title_list))
 async def process_title_sent(message: Message, i18n: dict[str, str], state: FSMContext):
-    keyboard = create_inline_kb(1, i18n, start_menu='cancel_wishlist_creation')
+    keyboard = create_inline_kb(1, i18n, btn_my_wishlists='cancel_wishlist_creation')
     title = message.text.strip()
 
     # validating input
@@ -58,7 +58,7 @@ async def process_title_sent(message: Message, i18n: dict[str, str], state: FSMC
 # 2 step of creating wishlist
 @router.message(StateFilter(FSMNewWishList.fill_description_list))
 async def process_description_sent(message: Message, i18n: dict[str, str], state: FSMContext):
-    keyboard = create_inline_kb(1, i18n, start_menu='cancel_wishlist_creation')
+    keyboard = create_inline_kb(1, i18n, btn_my_wishlists='cancel_wishlist_creation')
     description = message.text.strip()
 
     # validating input
