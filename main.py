@@ -31,6 +31,10 @@ async def main():
 
     config: Config = load_config()
 
+    db_conn = DatabaseConnection(config.db.url)
+    db_conn.connect()
+    await db_conn.create_tables()
+    
     storage = MemoryStorage()
 
     bot = Bot(
@@ -46,6 +50,7 @@ async def main():
 
     logger.info('Connecting middleware')
 
+    dp.update.middleware(DatabaseMiddleware(db_conn))
     dp.update.middleware(TranslatorMiddleware())
 
     await bot.delete_webhook(drop_pending_updates=True)
