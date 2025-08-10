@@ -3,13 +3,15 @@ from aiogram.filters import CommandStart, Command, StateFilter
 from aiogram.fsm.state import default_state
 from aiogram.types import Message, CallbackQuery
 from keyboards.keyboard_utils import create_inline_kb
+from datebase.db import Database
+from database.models import User, Wishlist, Item 
 
 # Initialize router for handling messages and callbacks
 router = Router()
 
 # Handler for /start command (only in default state)
 @router.message(CommandStart(), StateFilter(default_state))
-async def process_start_message(message: Message, i18n: dict[str, str]):
+async def process_start_message(message: Message, i18n: dict[str, str], db: Database):
     """
     Handles the /start command by sending a welcome message with interactive buttons.
     
@@ -19,11 +21,20 @@ async def process_start_message(message: Message, i18n: dict[str, str]):
     """
     # Create inline keyboard with 2 buttons per row using localization keys
     keyboard = create_inline_kb(2, i18n, 'btn_my_wishlists', 'btn_friends_wishlists', 'btn_help')
+
+    # Get or create user
+    user = await db.get_or_create_user(
+        telegram_id=message.from_user.id,
+        username=message.from_user.username
+    )
     
     # Send welcome message with the generated keyboard
     await message.answer(
         text=i18n.get('/start'),  # Get localized start message
         reply_markup=keyboard
+    )
+    await message.answer(
+        text=f"id:{user.id}, username: @{user.username}"
     )
 
 # Handler for returning to start menu via callback
