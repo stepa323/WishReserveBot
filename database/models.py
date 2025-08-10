@@ -1,10 +1,16 @@
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Float, Text, Enum
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, DeclarativeBase
 from sqlalchemy.ext.declarative import declarative_base
 from datetime import datetime
 from enum import Enum as PyEnum
+from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 
-Base = declarative_base()
+engine = create_async_engine(url='sqlite+aiosqlite:///db.sqlite3', echo=True)
+
+async session = async_sessionmaker(engine)
+
+class Base(AsyncAttrs, DeclarativeBase):
+    pass
 
 class PriorityLevel(PyEnum):
     """Priority levels for wishlist items with consistent naming"""
@@ -70,3 +76,8 @@ class Item(Base):
 
     def __repr__(self):
         return f"<Item(id={self.id}, name='{self.name[:15]}...', priority={self.priority_level}>"
+
+
+async def async_main():
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
