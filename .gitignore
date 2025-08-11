@@ -10,3 +10,5 @@ ENV/
 
 .vscode/
 .idea/
+
+*.sqlite3
