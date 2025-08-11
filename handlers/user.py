@@ -1,5 +1,6 @@
 from aiogram import Router, F
 from aiogram.filters import CommandStart, Command, StateFilter
+from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import default_state
 from aiogram.types import Message, CallbackQuery
 from aiogram.utils.chat_action import ChatActionSender
@@ -54,11 +55,12 @@ async def process_start_message(callback: CallbackQuery, i18n: dict[str, str]):
     )
 
 
-@router.callback_query(F.data == 'btn_my_wishlists', StateFilter(default_state))
-async def process_btn_my_wishlist_click(callback: CallbackQuery, i18n: dict[str, str]):
+@router.callback_query(F.data == 'btn_my_wishlists')
+async def process_btn_my_wishlist_click(callback: CallbackQuery, i18n: dict[str, str], state: FSMContext):
     """
     Displays user's wishlists with interactive buttons or empty state if none exist.
     """
+    await state.clear()
     user_id = callback.from_user.id
     wishlists = await get_wishlists(user_id)
 
@@ -135,7 +137,6 @@ async def view_wishlist(callback: CallbackQuery, i18n: dict[str, str]):
 
         # Format wishlist details
         text_parts = [
-            f"=============================="
             f"📌 <b>{wishlist.title}</b>",
             f"👤 {i18n.get('created_by')}: @{wishlist.owner.username}"
         ]
@@ -149,7 +150,7 @@ async def view_wishlist(callback: CallbackQuery, i18n: dict[str, str]):
 
         if wishlist.owner.telegram_id == callback.from_user.id:
             keyboard = create_inline_kb(
-                2,
+                3,
                 i18n,
                 **{f"add_item_{wishlist.id}": 'btn_add_item',
                    f"edit_wishlist_{wishlist.id}": 'btn_edit_wishlist',
@@ -197,4 +198,3 @@ async def process_help_command(message: Message, i18n: dict[str, str]):
         text=i18n.get('/help'),
         reply_markup=keyboard
     )
-

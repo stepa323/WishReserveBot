@@ -19,12 +19,12 @@ router = Router()
 logger = logging.getLogger(__name__)
 
 
-# Exit from states machine
-@router.callback_query(F.data == 'btn_my_wishlists', ~StateFilter(default_state))
-async def process_cancel_command(callback: CallbackQuery, i18n: dict[str, str], state: FSMContext):
-    await callback.answer(text=i18n.get('canceled_wishlist_creation'), show_alert=True)
+#* Exit from states machine
+#@router.callback_query(F.data == 'btn_my_wishlists', ~StateFilter(default_state))
+#async def process_cancel_command(callback: CallbackQuery, i18n: dict[str, str], state: FSMContext):
+    #await callback.answer(text=i18n.get('canceled_wishlist_creation'), show_alert=True)
 
-    await state.clear()
+  #  await state.clear()
 
 
 # 0 step of creating wishlist
