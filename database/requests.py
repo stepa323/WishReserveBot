@@ -1,8 +1,8 @@
 from datetime import datetime
 from typing import Optional
-from sqlalchemy import select
+from sqlalchemy import select, func
 from sqlalchemy.orm import selectinload, joinedload
-from database.models import User, Wishlist, async_session
+from database.models import User, Wishlist, async_session, Item
 
 
 async def get_or_create_user(telegram_id: int, username: str | None = None) -> User:
@@ -122,3 +122,38 @@ async def get_wishlist(
         wishlist = result.scalars().unique().first()
 
         return wishlist
+
+
+async def get_stats() -> tuple[int, int, int]:
+    """
+    Counts users that use bot and their wishlists and gifts
+
+    :return: Tuple containing (users_count, wishlists_count, gifts_count)
+    :rtype: tuple[int, int, int]
+    """
+    async with async_session() as session:
+        # Count users
+        users_query = select(func.count()).select_from(User)
+        users_count = (await session.execute(users_query)).scalar_one()
+
+        # Count wishlists
+        wishlists_query = select(func.count()).select_from(Wishlist)
+        wishlists_count = (await session.execute(wishlists_query)).scalar_one()
+
+        # Count gifts
+        gifts_query = select(func.count()).select_from(Item)
+        gifts_count = (await session.execute(gifts_query)).scalar_one()
+
+        return users_count, wishlists_count, gifts_count
+
+
+async def get_all_users_id() -> list[int]:
+    """
+    Gets all users telegram id
+
+    :return: List of ids
+    """
+    async with async_session() as session:
+        query = select(User.telegram_id)
+        result = await session.execute(query)
+        return result.scalars().all()

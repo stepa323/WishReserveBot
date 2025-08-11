@@ -13,3 +13,6 @@ class FSMNewGift(StatesGroup):
     fill_price = State()
     fill_link = State()
     fill_priority = State()
+
+class AdminState(StatesGroup):
+    waiting_newsletter_message = State()

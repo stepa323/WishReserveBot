@@ -119,3 +119,5 @@ def is_date_in_past(date_str: str) -> bool:
         return input_date < datetime.now().date()
     except ValueError:
         return False
+
+
