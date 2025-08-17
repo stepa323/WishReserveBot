@@ -1,8 +1,13 @@
+import logging
+import uuid
 from datetime import datetime
-from typing import Optional
-from sqlalchemy import select, func
+from typing import Optional, Union
+from sqlalchemy import select, func, update
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import selectinload, joinedload
-from database.models import User, Wishlist, async_session, Item
+from database.models import User, Wishlist, async_session, Item, WishlistSubscription
+
+logger = logging.getLogger(__name__)
 
 
 async def get_or_create_user(telegram_id: int, username: str | None = None) -> User:
@@ -22,17 +27,28 @@ async def get_or_create_user(telegram_id: int, username: str | None = None) -> U
         return user
 
 
-async def get_wishlists(user_id: int) -> Optional[list[Wishlist]]:
+async def get_wishlists(user_id: int) -> list[Wishlist]:
+    """Get all active wishlists for specified user"""
     async with async_session() as session:
-        user = await session.scalar(
-            select(User)
-            .where(User.telegram_id == user_id)
-            .options(selectinload(User.wishlists)))
-        return user.wishlists if user else []
+        result = await session.execute(
+            select(Wishlist)
+            .where(Wishlist.owner_id == user_id)
+            .where(Wishlist.is_deleted == False)
+            .order_by(Wishlist.created_at.desc())
+        )
+        return result.scalars().all() or []
 
 
 async def get_friends_wishlists(user_id: int) -> Optional[list[Wishlist]]:
-    return []
+    async with async_session() as session:
+        result = await session.execute(
+            select(Wishlist)
+            .join(Wishlist.subscriptions)
+            .where(WishlistSubscription.subscriber_id == user_id)
+            .where(Wishlist.is_deleted == False)
+            .order_by(Wishlist.created_at.desc())
+        )
+        return result.scalars().unique().all() or []
 
 
 async def create_or_update_wishlist(
@@ -40,6 +56,7 @@ async def create_or_update_wishlist(
         wishlist_id: Optional[int] = None,
         user_id: int,
         title: str,
+        is_private: bool,
         description: Optional[str] = None,
         event_date: Optional[datetime] = None,
         with_owner: bool = False,
@@ -48,6 +65,7 @@ async def create_or_update_wishlist(
     """
     Create or update wishlist
     
+    :param is_private: Wishlist privacy
     :param wishlist_id: ID existing (None for creating new)
     :param user_id: ID owner (user.telegram_id)
     :param title: Wishlist title
@@ -85,6 +103,7 @@ async def create_or_update_wishlist(
 
         wishlist = Wishlist(
             title=title,
+            is_private=is_private,
             description=description,
             event_date=event_date,
             owner_id=user.id
@@ -97,27 +116,66 @@ async def create_or_update_wishlist(
 
 
 async def get_wishlist(
-        wishlist_id: int,
+        wishlist_identifier: Union[int, str, uuid.UUID],
         *,
         with_owner: bool = False,
-        with_items: bool = False
+        with_items: bool = False,
+        with_subscriptions: bool = False,
+        only_active: bool = True
 ) -> Optional[Wishlist]:
     """
-    Retrieve a single wishlist by ID with optional relationships
+    Retrieve a wishlist by ID or UUID with optional relationships
 
-    :param wishlist_id: ID of the wishlist to retrieve
-    :param with_owner: Whether to load the owner relationship
-    :param with_items: Whether to load the items relationship
-    :return: Wishlist object if found, None otherwise
+    Args:
+        wishlist_identifier: Can be:
+            - int: Wishlist ID
+            - str/UUID: Wishlist access UUID
+        with_owner: Load owner relationship
+        with_items: Load items relationship (uses selectinload for better performance)
+        with_subscriptions: Load subscriptions relationship
+        only_active: Exclude deleted wishlists
+
+    Returns:
+        Wishlist object if found, None otherwise
+
+    Raises:
+        ValueError: If invalid identifier type provided
     """
     async with async_session() as session:
-        query = select(Wishlist).where(Wishlist.id == wishlist_id)
+        # Build base query
+        query = select(Wishlist)
+
+        # Handle different identifier types
+        if isinstance(wishlist_identifier, int):
+            query = query.where(Wishlist.id == wishlist_identifier)
+        elif isinstance(wishlist_identifier, (str, uuid.UUID)):
+            try:
+                uuid_obj = uuid.UUID(str(wishlist_identifier)) if isinstance(wishlist_identifier,
+                                                                             str) else wishlist_identifier
+                query = query.where(Wishlist.access_uuid == uuid_obj)
+            except ValueError:
+                return None
+        else:
+            raise ValueError("wishlist_identifier must be int or UUID/str")
+
+        # Filter out deleted wishlists if needed
+        if only_active:
+            query = query.where(Wishlist.is_deleted == False)
+
+        # Eager loading for relationships
+        load_options = []
 
         if with_owner:
-            query = query.options(joinedload(Wishlist.owner))
+            load_options.append(joinedload(Wishlist.owner))
         if with_items:
-            query = query.options(selectinload(Wishlist.items))
+            load_options.append(selectinload(Wishlist.items))
+        if with_subscriptions:
+            load_options.append(selectinload(Wishlist.subscriptions))
 
+        if load_options:
+            query = query.options(*load_options)
+
+        # Execute query
         result = await session.execute(query)
         wishlist = result.scalars().unique().first()
 
@@ -157,3 +215,22 @@ async def get_all_users_id() -> list[int]:
         query = select(User.telegram_id)
         result = await session.execute(query)
         return result.scalars().all()
+
+
+async def delete_wishlist_db(wishlist_id: int) -> bool:
+    """
+    Soft delete wishlist by marking it as deleted
+    """
+    async with async_session() as session:
+        try:
+            result = await session.execute(
+                update(Wishlist)
+                .where(Wishlist.id == wishlist_id)
+                .values(is_deleted=True)
+            )
+            await session.commit()
+            return result.rowcount > 0  # Returns True if any row was affected
+        except SQLAlchemyError as e:
+            logger.error(f"Error deleting wishlist {wishlist_id}: {e}")
+            await session.rollback()
+            return False

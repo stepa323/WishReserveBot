@@ -36,13 +36,19 @@ Ask friends to share their wishlists with you''',
 Reserve gifts secretly and make their day!''',
 
     'create_wishlist_title': '✏️ Enter wishlist title (4-50 chars):',
+    'choose_privacy': '🔒 Choose wishlist visibility:',
+    'private': 'Private',
+    'public': 'Public',
     'create_wishlist_description': '📝 Add description (optional, /skip to bypass):',
     'create_wishlist_date': '📅 Event date (DD.MM.YYYY or /skip):',
-    'wishlist_created': '''✅ <b>Wishlist created successfully!</b>
+    'wishlist_created': '''✅ <b>Wishlist successfully created!</b>
 
 🎯 <b>Title:</b> {title}
 📝 <b>Description:</b> {description}
+🔒 <b>Visibility:</b> {visibility}
 📅 <b>Date:</b> {date}''',
+    'visibility_private': 'Private',
+    'visibility_public': 'Public',
     'cancel_wishlist_creation': '❌ Cancel',
     'not_specified': 'Not specified',
     'canceled_wishlist_creation': 'ℹ️ Creation canceled',
@@ -76,7 +82,7 @@ Reserve gifts secretly and make their day!''',
     'wishlist_not_found': "Wishlist not found",
     'btn_add_item': "➕ Add item",
     'btn_edit_wishlist': "✏️ Edit",
-    'btn_share_wishlist': "🔗 Share",
+    'btn_delete_wishlist': "🗑 Delete",
 
     'admin_welcome': 'Welcome to Admin Panel!',
     'admin_newsletter_btn': 'Newsletter',
@@ -90,4 +96,9 @@ Reserve gifts secretly and make their day!''',
     'confirm_yes': '✅ Yes, send',
     'confirm_no': '❌ Cancel',
     'error_no_message': 'Error: newsletter message not found',
+
+    'access_denied': '⛔ Access denied',
+    'invalid_request': '❌ Invalid request',
+    'error_occurred': '⚠️ An error occurred',
+    'wishlist_deleted_success': '✅ Wishlist successfully deleted'
 }

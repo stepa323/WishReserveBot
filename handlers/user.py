@@ -7,7 +7,8 @@ from aiogram.utils.chat_action import ChatActionSender
 
 from keyboards.keyboard_utils import create_inline_kb
 
-from database.requests import get_or_create_user, get_wishlists, get_friends_wishlists, get_wishlist
+from database.requests import get_or_create_user, get_wishlists, get_friends_wishlists, get_wishlist, delete_wishlist_db
+from main import logger
 
 # Initialize router for handling messages and callbacks
 router = Router()
@@ -61,7 +62,8 @@ async def process_btn_my_wishlist_click(callback: CallbackQuery, i18n: dict[str,
     Displays user's wishlists with interactive buttons or empty state if none exist.
     """
     await state.clear()
-    user_id = callback.from_user.id
+    user = await get_or_create_user(callback.from_user.id, callback.from_user.username)
+    user_id = user.id
     wishlists = await get_wishlists(user_id)
 
     await callback.answer()  # Acknowledge callback
@@ -76,7 +78,7 @@ async def process_btn_my_wishlist_click(callback: CallbackQuery, i18n: dict[str,
         else:
             wishlists_buttons = {}
             for wishlist in wishlists:
-                wishlists_buttons[f'view_wishlist_{wishlist.id}'] = f'🎁 {wishlist.title}'
+                wishlists_buttons[f'view_wishlist_{wishlist.access_uuid}'] = f'🎁 {wishlist.title}'
 
             keyboard = create_inline_kb(1, i18n, **wishlists_buttons, btn_create_wishlist='btn_create_wishlist',
                                         start_menu='btn_go_back')
@@ -92,7 +94,8 @@ async def process_btn_friends_wishlists(callback: CallbackQuery, i18n: dict[str,
     """
     Displays friends' wishlists with sharing status or empty state.
     """
-    user_id = callback.from_user.id
+    user = await get_or_create_user(callback.from_user.id, callback.from_user.username)
+    user_id = user.id
     friends_wishlists = await get_friends_wishlists(user_id)
 
     await callback.answer()
@@ -106,7 +109,7 @@ async def process_btn_friends_wishlists(callback: CallbackQuery, i18n: dict[str,
     else:
         wishlists_buttons = {}
         for wishlist in friends_wishlists:
-            wishlists_buttons[f'view_wishlist_{wishlist.id}'] = f'🎁 {wishlist.title}'
+            wishlists_buttons[f'view_wishlist_{wishlist.access_uuid}'] = f'🎁 {wishlist.title}'
 
         keyboard = create_inline_kb(1, i18n, **wishlists_buttons,
                                     start_menu='btn_go_back')
@@ -124,9 +127,9 @@ async def view_wishlist(callback: CallbackQuery, i18n: dict[str, str]):
     """
     await callback.answer()
     async with ChatActionSender.typing(bot=callback.bot, chat_id=callback.from_user.id):
-        wishlist_id = int(callback.data.split('view_wishlist_')[1])
+        wishlist_uuid = callback.data.split('view_wishlist_')[1]
 
-        wishlist = await get_wishlist(wishlist_id=wishlist_id, with_items=True, with_owner=True)
+        wishlist = await get_wishlist(wishlist_identifier=wishlist_uuid, with_items=True, with_owner=True)
 
         if not wishlist:
             await callback.message.edit_text(
@@ -154,7 +157,7 @@ async def view_wishlist(callback: CallbackQuery, i18n: dict[str, str]):
                 i18n,
                 **{f"add_item_{wishlist.id}": 'btn_add_item',
                    f"edit_wishlist_{wishlist.id}": 'btn_edit_wishlist',
-                   f"share_wishlist_{wishlist.id}": 'btn_share_wishlist'},
+                   f"delete_wishlist_{wishlist.id}": 'btn_delete_wishlist'},
                 btn_my_wishlists='btn_go_back'
             )
         else:
@@ -165,6 +168,31 @@ async def view_wishlist(callback: CallbackQuery, i18n: dict[str, str]):
             reply_markup=keyboard
         )
 
+
+@router.callback_query(F.data.startswith('delete_wishlist'))
+async def delete_wishlist(callback: CallbackQuery, i18n: dict[str, str]):
+    try:
+        wishlist_id = int(callback.data.split('delete_wishlist_')[1])
+
+        wishlist = await get_wishlist(wishlist_id)
+        user = await get_or_create_user(callback.from_user.id)
+        user_id = user.id
+        if not wishlist or wishlist.owner_id != user_id:
+            await callback.answer(i18n.get('access_denied'), show_alert=True)
+            return
+
+        await delete_wishlist_db(wishlist_id)
+        keyboard = create_inline_kb(1, i18n, 'btn_my_wishlists')
+        await callback.message.edit_text(
+            text=i18n.get('wishlist_deleted_success'),
+            reply_markup=keyboard
+        )
+        await callback.answer()
+    except (IndexError, ValueError):
+        await callback.answer(i18n['invalid_request'], show_alert=True)
+    except Exception as e:
+        logger.error(f"Error deleting wishlist: {e}")
+        await callback.answer(i18n['error_occurred'], show_alert=True)
 
 # Handler for "Help" button click
 @router.callback_query(F.data == 'btn_help', StateFilter(default_state))
