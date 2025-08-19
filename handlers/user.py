@@ -1,6 +1,5 @@
 from aiogram import Router, F
 from aiogram.filters import CommandStart, Command, StateFilter
-from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import default_state
 from aiogram.types import Message, CallbackQuery
 from aiogram.utils.chat_action import ChatActionSender
@@ -56,12 +55,11 @@ async def process_start_message(callback: CallbackQuery, i18n: dict[str, str]):
     )
 
 
-@router.callback_query(F.data == 'btn_my_wishlists')
-async def process_btn_my_wishlist_click(callback: CallbackQuery, i18n: dict[str, str], state: FSMContext):
+@router.callback_query(F.data == 'btn_my_wishlists', StateFilter(default_state))
+async def process_btn_my_wishlist_click(callback: CallbackQuery, i18n: dict[str, str]):
     """
     Displays user's wishlists with interactive buttons or empty state if none exist.
     """
-    await state.clear()
     user = await get_or_create_user(callback.from_user.id, callback.from_user.username)
     user_id = user.id
     wishlists = await get_wishlists(user_id)
@@ -120,7 +118,7 @@ async def process_btn_friends_wishlists(callback: CallbackQuery, i18n: dict[str,
         )
 
 
-@router.callback_query(F.data.startswith('view_wishlist'))
+@router.callback_query(F.data.startswith('view_wishlist'), StateFilter(default_state))
 async def view_wishlist(callback: CallbackQuery, i18n: dict[str, str]):
     """
     Displays wishlist title, description, event date and gifts with interactive buttons
@@ -169,7 +167,7 @@ async def view_wishlist(callback: CallbackQuery, i18n: dict[str, str]):
         )
 
 
-@router.callback_query(F.data.startswith('delete_wishlist'))
+@router.callback_query(F.data.startswith('delete_wishlist'), StateFilter(default_state))
 async def delete_wishlist(callback: CallbackQuery, i18n: dict[str, str]):
     try:
         wishlist_id = int(callback.data.split('delete_wishlist_')[1])

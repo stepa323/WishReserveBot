@@ -2,10 +2,10 @@ from aiogram.fsm.state import StatesGroup, State
 
 
 class FSMNewWishList(StatesGroup):
-    fill_title_list = State()
-    choose_privacy = State()
-    fill_description_list = State()
-    fill_date = State()
+    wishlist_info = State()
+    editing_title = State()
+    editing_description = State()
+    editing_date = State()
 
 class FSMNewGift(StatesGroup):
     fill_title_gift = State()

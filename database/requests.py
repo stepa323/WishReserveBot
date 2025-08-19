@@ -55,6 +55,7 @@ async def create_or_update_wishlist(
         *,
         wishlist_id: Optional[int] = None,
         user_id: int,
+        username: Optional[str] = None,
         title: str,
         is_private: bool,
         description: Optional[str] = None,
@@ -65,6 +66,7 @@ async def create_or_update_wishlist(
     """
     Create or update wishlist
     
+    :param username:
     :param is_private: Wishlist privacy
     :param wishlist_id: ID existing (None for creating new)
     :param user_id: ID owner (user.telegram_id)
@@ -98,9 +100,10 @@ async def create_or_update_wishlist(
 
         if title is None:
             raise ValueError("Title is required for new wishlist")
-
-        user: User = await get_or_create_user(user_id)
-
+        if username:
+            user: User = await get_or_create_user(user_id, username)
+        else:
+            user: User = await get_or_create_user(user_id)
         wishlist = Wishlist(
             title=title,
             is_private=is_private,

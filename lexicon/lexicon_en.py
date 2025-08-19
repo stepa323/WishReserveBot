@@ -14,10 +14,8 @@ Our support team is available 24/7 to help you.''',
     'btn_start': '🚀 Begin',
     'btn_support': '💬 Support',
     'btn_go_back': '↩ Back',
-    'btn_my_wishlists': '📋 My Wishlists',
     'btn_friends_wishlists': "👯 Friends' Lists",
     'btn_help': '❓ Help Center',
-    'btn_create_wishlist': '➕ New Wishlist',
 
     'my_wishlists_if_none': '''📭 <b>No wishlists yet</b>
 
@@ -35,24 +33,6 @@ Ask friends to share their wishlists with you''',
 
 Reserve gifts secretly and make their day!''',
 
-    'create_wishlist_title': '✏️ Enter wishlist title (4-50 chars):',
-    'choose_privacy': '🔒 Choose wishlist visibility:',
-    'private': 'Private',
-    'public': 'Public',
-    'create_wishlist_description': '📝 Add description (optional, /skip to bypass):',
-    'create_wishlist_date': '📅 Event date (DD.MM.YYYY or /skip):',
-    'wishlist_created': '''✅ <b>Wishlist successfully created!</b>
-
-🎯 <b>Title:</b> {title}
-📝 <b>Description:</b> {description}
-🔒 <b>Visibility:</b> {visibility}
-📅 <b>Date:</b> {date}''',
-    'visibility_private': 'Private',
-    'visibility_public': 'Public',
-    'cancel_wishlist_creation': '❌ Cancel',
-    'not_specified': 'Not specified',
-    'canceled_wishlist_creation': 'ℹ️ Creation canceled',
-
     # Item creation flow
     'add_item_name': '🎁 Item name:',
     'add_item_description': '📌 Description (optional):',
@@ -66,13 +46,6 @@ Reserve gifts secretly and make their day!''',
         'medium': 'Nice to have',
         'low': 'If possible'
     },
-
-    # Validation messages
-    'invalid_title_length': "⚠ Title must be 4-50 characters",
-    'invalid_description_length': "⚠ Description exceeds 300 chars",
-    'empty_date_error': "⚠ Please enter date",
-    'invalid_date_format': "⚠ Use DD.MM.YYYY format",
-    'date_in_past_error': "⚠ Date cannot be past",
 
     'created_by': "Created by",
     'description': "Description",
@@ -97,8 +70,45 @@ Reserve gifts secretly and make their day!''',
     'confirm_no': '❌ Cancel',
     'error_no_message': 'Error: newsletter message not found',
 
-    'access_denied': '⛔ Access denied',
     'invalid_request': '❌ Invalid request',
-    'error_occurred': '⚠️ An error occurred',
-    'wishlist_deleted_success': '✅ Wishlist successfully deleted'
+    'wishlist_deleted_success': '✅ Wishlist successfully deleted',
+
+    # Wishlist interface elements
+    "title_button": "✏️ Title: {title}",
+    "privacy_button": "🔒 Privacy: {status}",
+    "description_button": "📝 Description: {desc}",
+    "date_button": "📅 Date: {date}",
+    "not_specified": "not specified",
+    "private": "private",
+    "public": "public",
+
+    # Input prompts
+    "enter_title_prompt": "Enter wishlist title (up to 50 characters):",
+    "enter_description_prompt": "Enter description (up to 300 characters):",
+    "enter_date_prompt": "Enter date in DD.MM.YYYY format:",
+
+    # Error messages
+    "title_too_long": "❌ Title is too long (max 50 characters)",
+    "description_too_long": "❌ Description is too long (max 300 characters)",
+    "invalid_date_format": "❌ Invalid date format. Use DD.MM.YYYY",
+
+    # Main messages
+    "wishlist_edit_menu": "📋 Wishlist editing:\n\nSelect parameter to edit:",
+    "creation_canceled": "❌ Wishlist creation canceled",
+    "wishlist_created": "✅ Wishlist «{title}» created successfully!",
+    "view_wishlist": "👀 View wishlist",
+    "back_to_wishlist": "👀 Back to wishlist",
+    "save_error": "❌ Error saving wishlist",
+
+    # Action buttons
+    "cancel": "❌ Cancel",
+    "confirm": "✅ Confirm",
+    "btn_create_wishlist": "➕ Create wishlist",
+    "btn_my_wishlists": "📋 My wishlists",
+
+    # Validation messages
+    "invalid_title_length": "Title must be between 4 and 50 characters",
+    "invalid_description_length": "Description must not exceed 300 characters",
+    "access_denied": "⛔ Access denied",
+    "error_occurred": "⚠️ An error occurred"
 }
