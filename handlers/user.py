@@ -1,38 +1,79 @@
-from aiogram import Router, F
+from aiogram import Router, F, Bot
 from aiogram.filters import CommandStart, Command, StateFilter
 from aiogram.fsm.state import default_state
-from aiogram.types import Message, CallbackQuery
+from aiogram.types import Message, CallbackQuery, User
 from aiogram.utils.chat_action import ChatActionSender
 
+from database.models import Wishlist, SubscriptionStatus
+from handlers.handlers_utils import render_wishlist_template, render_limited_wishlist_template, get_i18n
 from keyboards.keyboard_utils import create_inline_kb
 
-from database.requests import get_or_create_user, get_wishlists, get_friends_wishlists, get_wishlist, delete_wishlist_db
+from database.requests import get_or_create_user, get_wishlists, get_friends_wishlists, get_wishlist, \
+    delete_wishlist_db, get_subscription, delete_subscription, get_or_create_subscription, update_subscription_status, \
+    get_subscription_with_details, get_user_language
 from main import logger
 
 # Initialize router for handling messages and callbacks
 router = Router()
 
 
-# Handler for /start command (only in default state)
+# Handler for /start command
 @router.message(CommandStart(), StateFilter(default_state))
 async def process_start_message(message: Message, i18n: dict[str, str]):
     """
-    Handles the /start command by sending a welcome message with interactive buttons.
+    Handles the /start command with wishlist links support
     """
-    # Create inline keyboard with 1 buttons per row using localization keys
-    keyboard = create_inline_kb(1, i18n, 'btn_my_wishlists', 'btn_friends_wishlists', 'btn_help')
-
     # Get or create user
-    await get_or_create_user(
+    user = await get_or_create_user(
         telegram_id=message.from_user.id,
         username=message.from_user.username
     )
 
-    # Send welcome message with the generated keyboard
-    await message.answer(
+    # Send standard welcome message
+    keyboard = create_inline_kb(1, i18n, 'btn_my_wishlists', 'btn_friends_wishlists', 'btn_help')
+
+    welcome_msg = await message.answer(
         text=i18n.get('/start'),
         reply_markup=keyboard,
         message_effect_id="5046509860389126442"
+    )
+
+    # Check if start command contains wishlist UUID
+    args = message.text.split()
+    if len(args) > 1:
+        wishlist_uuid = args[1]
+        await handle_wishlist_link(message, wishlist_uuid, user, i18n)
+
+
+async def handle_wishlist_link(message: Message, wishlist_uuid: str, user: User, i18n: dict):
+    wishlist = await get_wishlist(wishlist_identifier=wishlist_uuid, with_owner=True)
+
+    if not wishlist:
+        await message.answer(i18n.get('wishlist_not_found'))
+        return
+
+    # Check if user is the owner
+    if wishlist.owner_id == user.id:
+        keyboard = create_inline_kb(1, i18n, **{f"view_wishlist_{wishlist.access_uuid}": 'view_wishlist'})
+        await message.answer(
+            text=i18n.get('wishlist_own_access'),
+            reply_markup=keyboard
+        )
+        return
+
+    # Send notification about shared wishlist
+    share_keyboard = create_inline_kb(
+        1,
+        i18n,
+        **{f"view_wishlist_{wishlist.access_uuid}": 'view_wishlist'}
+    )
+
+    await message.answer(
+        text=i18n.get('wishlist_shared_with_you').format(
+            owner_username=wishlist.owner.username,
+            wishlist_title=wishlist.title
+        ),
+        reply_markup=share_keyboard
     )
 
 
@@ -55,7 +96,216 @@ async def process_start_message(callback: CallbackQuery, i18n: dict[str, str]):
     )
 
 
-@router.callback_query(F.data == 'btn_my_wishlists', StateFilter(default_state))
+@router.callback_query(F.data.startswith('subscribe_'))
+async def subscribe_to_wishlist(callback: CallbackQuery, i18n: dict):
+    await callback.answer()
+
+    wishlist_id = int(callback.data.split('_')[1])
+    wishlist = await get_wishlist(wishlist_id, with_owner=True)
+
+    if not wishlist:
+        await callback.answer(i18n.get('wishlist_not_found'), show_alert=True)
+        return
+
+    user = await get_or_create_user(callback.from_user.id)
+
+    # Check if already subscribed
+    existing_subscription = await get_subscription(user.id, wishlist.id)
+    if existing_subscription:
+        if existing_subscription.status == SubscriptionStatus.APPROVED:
+            await callback.answer(i18n.get('already_subscribed'), show_alert=True)
+            return
+        elif existing_subscription.status == SubscriptionStatus.PENDING:
+            await callback.answer(i18n.get('subscription_pending'), show_alert=True)
+            return
+
+    if wishlist.is_private:
+        subscription = await get_or_create_subscription(
+            user.id, wishlist.id, wishlist.owner_id, SubscriptionStatus.PENDING
+        )
+        await callback.answer(i18n.get('subscription_request_sent'), show_alert=True)
+
+        await notify_owner_about_request(callback.bot, wishlist, user, i18n)
+    else:
+        subscription = await get_or_create_subscription(
+            user.id, wishlist.id, wishlist.owner_id, SubscriptionStatus.APPROVED
+        )
+        await callback.answer(i18n.get('subscribed_success'), show_alert=True)
+
+    from aiogram.types import CallbackQuery
+
+    class FakeCallback:
+        def __init__(self, message, from_user, access_uuid):
+            self.message = message
+            self.from_user = from_user
+            self.data = f"view_wishlist_{access_uuid}"
+
+        async def answer(self):
+            pass
+
+    fake_callback = FakeCallback(callback.message, callback.from_user, wishlist.access_uuid)
+    await view_wishlist(fake_callback, i18n)
+
+
+@router.callback_query(F.data.startswith('unsubscribe_'))
+async def unsubscribe_from_wishlist(callback: CallbackQuery, i18n: dict):
+    await callback.answer()
+
+    wishlist_id = int(callback.data.split('_')[1])
+    wishlist = await get_wishlist(wishlist_id, with_owner=True)
+
+    if not wishlist:
+        await callback.answer(i18n.get('wishlist_not_found'), show_alert=True)
+        return
+
+    user = await get_or_create_user(callback.from_user.id)
+    subscription = await get_subscription(user.id, wishlist.id)
+
+    if not subscription:
+        await callback.answer(i18n.get('not_subscribed'), show_alert=True)
+        return
+
+    await delete_subscription(subscription.id)
+
+    await callback.answer(i18n.get('unsubscribed_success'), show_alert=True)
+
+    from aiogram.types import CallbackQuery
+
+    class FakeCallback:
+        def __init__(self, message, from_user, access_uuid):
+            self.message = message
+            self.from_user = from_user
+            self.data = f"view_wishlist_{access_uuid}"
+
+        async def answer(self):
+            pass
+
+    fake_callback = FakeCallback(callback.message, callback.from_user, wishlist.access_uuid)
+    await view_wishlist(fake_callback, i18n)
+
+
+async def notify_owner_about_request(bot: Bot, wishlist: Wishlist, subscriber: User, translations: dict):
+    # язык владельца из базы
+    owner_lang = await get_user_language(wishlist.owner.telegram_id)
+    i18n = get_i18n(translations, owner_lang)
+
+    keyboard = create_inline_kb(
+        2,
+        i18n,
+        **{
+            f"approve_sub_{subscriber.id}_{wishlist.id}": 'btn_approve',
+            f"reject_sub_{subscriber.id}_{wishlist.id}": 'btn_reject'
+        }
+    )
+
+    try:
+        await bot.send_message(
+            chat_id=wishlist.owner.telegram_id,
+            text=i18n.get('wishlist_new_request', '').format(
+                username=subscriber.username or subscriber.telegram_id,
+                wishlist_title=wishlist.title
+            ),
+            reply_markup=keyboard
+        )
+    except Exception as e:
+        logger.error(f"Error notifying owner: {e}")
+
+
+@router.callback_query(F.data.startswith('approve_sub_'))
+async def approve_subscription(callback: CallbackQuery, i18n: dict):
+    """Одобряет запрос на подписку"""
+    await callback.answer()
+
+    try:
+        parts = callback.data.split('_')
+        subscriber_id = int(parts[2])
+        wishlist_id = int(parts[3])
+
+        # Сначала получаем данные ДО обновления
+        subscription = await get_subscription_with_details(subscriber_id, wishlist_id)
+        if not subscription:
+            await callback.answer(i18n.get('subscription_not_found'), show_alert=True)
+            return
+
+        # Сохраняем данные перед обновлением
+        wishlist_title = subscription.wishlist.title
+        subscriber_tg_id = subscription.subscriber.telegram_id
+        subscriber_username = subscription.subscriber.username or subscriber_tg_id
+
+        # Теперь обновляем статус
+        await update_subscription_status(subscription.id, SubscriptionStatus.APPROVED)
+
+        # Уведомляем подписчика
+        try:
+            await callback.bot.send_message(
+                chat_id=subscriber_tg_id,
+                text=i18n.get('subscription_approved').format(
+                    wishlist_title=wishlist_title
+                )
+            )
+        except Exception as e:
+            logger.error(f"Error notifying subscriber: {e}")
+
+        # Обновляем сообщение у владельца
+        await callback.message.edit_text(
+            text=i18n.get('subscription_approved_owner').format(
+                username=subscriber_username
+            )
+        )
+
+    except Exception as e:
+        logger.error(f"Error approving subscription: {e}")
+        await callback.answer(i18n.get('error_occurred'), show_alert=True)
+
+
+@router.callback_query(F.data.startswith('reject_sub_'))
+async def reject_subscription(callback: CallbackQuery, i18n: dict):
+    """Отклоняет запрос на подписку"""
+    await callback.answer()
+
+    try:
+        parts = callback.data.split('_')
+        subscriber_id = int(parts[2])
+        wishlist_id = int(parts[3])
+
+        # Сначала получаем данные ДО удаления
+        subscription = await get_subscription_with_details(subscriber_id, wishlist_id)
+        if not subscription:
+            await callback.answer(i18n.get('subscription_not_found'), show_alert=True)
+            return
+
+        # Сохраняем данные перед удалением
+        wishlist_title = subscription.wishlist.title
+        subscriber_tg_id = subscription.subscriber.telegram_id
+        subscriber_username = subscription.subscriber.username or subscriber_tg_id
+
+        # Теперь удаляем
+        await delete_subscription(subscription.id)
+
+        # Уведомляем подписчика
+        try:
+            await callback.bot.send_message(
+                chat_id=subscriber_tg_id,
+                text=i18n.get('subscription_rejected').format(
+                    wishlist_title=wishlist_title
+                )
+            )
+        except Exception as e:
+            logger.error(f"Error notifying subscriber: {e}")
+
+        # Обновляем сообщение у владельца
+        await callback.message.edit_text(
+            text=i18n.get('subscription_rejected_owner').format(
+                username=subscriber_username
+            )
+        )
+
+    except Exception as e:
+        logger.error(f"Error rejecting subscription: {e}")
+        await callback.answer(i18n.get('error_occurred'), show_alert=True)
+
+
+@router.callback_query(F.data == 'btn_my_wishlists')
 async def process_btn_my_wishlist_click(callback: CallbackQuery, i18n: dict[str, str]):
     """
     Displays user's wishlists with interactive buttons or empty state if none exist.
@@ -121,14 +371,14 @@ async def process_btn_friends_wishlists(callback: CallbackQuery, i18n: dict[str,
 @router.callback_query(F.data.startswith('view_wishlist'), StateFilter(default_state))
 async def view_wishlist(callback: CallbackQuery, i18n: dict[str, str]):
     """
-    Displays wishlist title, description, event date and gifts with interactive buttons
+    Displays wishlist using template
     """
     await callback.answer()
-    async with ChatActionSender.typing(bot=callback.bot, chat_id=callback.from_user.id):
-        wishlist_uuid = callback.data.split('view_wishlist_')[1]
+    wishlist_uuid = callback.data.split('view_wishlist_')[1]
 
-        wishlist = await get_wishlist(wishlist_identifier=wishlist_uuid, with_items=True, with_owner=True)
+    wishlist = await get_wishlist(wishlist_identifier=wishlist_uuid, with_items=True, with_owner=True)
 
+    try:
         if not wishlist:
             await callback.message.edit_text(
                 text=i18n.get('wishlist_not_found'),
@@ -136,35 +386,62 @@ async def view_wishlist(callback: CallbackQuery, i18n: dict[str, str]):
             )
             return
 
-        # Format wishlist details
-        text_parts = [
-            f"📌 <b>{wishlist.title}</b>",
-            f"👤 {i18n.get('created_by')}: @{wishlist.owner.username}"
-        ]
+        user = await get_or_create_user(callback.from_user.id)
+        subscription = await get_subscription(user.id, wishlist.id)
 
-        if wishlist.description:
-            text_parts.append(f"\n📝 {i18n.get('description')}:\n{wishlist.description}")
+        is_owner = wishlist.owner_id == user.id
+        is_subscribed = subscription and subscription.status == SubscriptionStatus.APPROVED
+        is_pending = subscription and subscription.status == SubscriptionStatus.PENDING
 
-        if wishlist.event_date:
-            formatted_date = wishlist.event_date.strftime("%d.%m.%Y")
-            text_parts.append(f"\n📅 {i18n.get('event_date')}: {formatted_date}")
+        if not is_owner and wishlist.is_private and not is_subscribed:
+            text = await render_limited_wishlist_template(wishlist, i18n, is_pending)
 
-        if wishlist.owner.telegram_id == callback.from_user.id:
-            keyboard = create_inline_kb(
-                3,
-                i18n,
-                **{f"add_item_{wishlist.id}": 'btn_add_item',
-                   f"edit_wishlist_{wishlist.id}": 'btn_edit_wishlist',
-                   f"delete_wishlist_{wishlist.id}": 'btn_delete_wishlist'},
-                btn_my_wishlists='btn_go_back'
-            )
+            if is_pending:
+                keyboard = create_inline_kb(
+                    1,
+                    i18n,
+                    **{f"view_wishlist_{wishlist.access_uuid}": 'btn_subscription_pending'},
+                    btn_friends_wishlists='btn_go_back'
+                )
+            else:
+                keyboard = create_inline_kb(
+                    1,
+                    i18n,
+                    **{f"subscribe_{wishlist.id}": 'btn_subscribe'},
+                    btn_friends_wishlists='btn_go_back'
+                )
         else:
-            keyboard = create_inline_kb(3, i18n, btn_friends_wishlists='btn_go_back')
+            text = await render_wishlist_template(callback.message, wishlist, user, i18n)
+
+            if is_owner:
+                keyboard = create_inline_kb(
+                    3,
+                    i18n,
+                    **{f"add_item_{wishlist.id}": 'btn_add_item',
+                       f"edit_wishlist_{wishlist.id}": 'btn_edit_wishlist',
+                       f"delete_wishlist_{wishlist.id}": 'btn_delete_wishlist'},
+                    btn_my_wishlists='btn_go_back'
+                )
+            else:
+                if is_subscribed:
+                    subscribe_btn = {f"unsubscribe_{wishlist.id}": 'btn_unsubscribe'}
+                else:
+                    subscribe_btn = {f"subscribe_{wishlist.id}": 'btn_subscribe'}
+
+                keyboard = create_inline_kb(
+                    1,
+                    i18n,
+                    **subscribe_btn,
+                    btn_friends_wishlists='btn_go_back'
+                )
 
         await callback.message.edit_text(
-            text='\n'.join(text_parts),
-            reply_markup=keyboard
+            text=text,
+            reply_markup=keyboard,
+            disable_web_page_preview=True
         )
+    except Exception as e:
+        logger.error(e)
 
 
 @router.callback_query(F.data.startswith('delete_wishlist'), StateFilter(default_state))
@@ -191,6 +468,7 @@ async def delete_wishlist(callback: CallbackQuery, i18n: dict[str, str]):
     except Exception as e:
         logger.error(f"Error deleting wishlist: {e}")
         await callback.answer(i18n['error_occurred'], show_alert=True)
+
 
 # Handler for "Help" button click
 @router.callback_query(F.data == 'btn_help', StateFilter(default_state))

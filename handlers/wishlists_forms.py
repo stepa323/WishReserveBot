@@ -84,7 +84,6 @@ async def start_wishlist_creation(callback: CallbackQuery, i18n: dict, state: FS
                 event_date=wishlist.event_date.strftime("%d.%m.%Y") if wishlist.event_date else None,
                 wishlist_id=wishlist.id
             )
-
             await state.set_state(FSMNewWishList.wishlist_info)
             last_msg = await callback.message.edit_text(
                 text=i18n['wishlist_edit_menu'],
@@ -220,10 +219,8 @@ async def process_date(message: Message, i18n: dict, state: FSMContext):
 async def confirm_wishlist(callback: CallbackQuery, i18n: dict, state: FSMContext):
     await callback.answer()
     data = await state.get_data()
-
     try:
         event_date = datetime.strptime(data['event_date'], "%d.%m.%Y") if data.get('event_date') else None
-
         wishlist = await create_or_update_wishlist(
             user_id=callback.from_user.id,
             username=callback.from_user.username,
@@ -233,7 +230,6 @@ async def confirm_wishlist(callback: CallbackQuery, i18n: dict, state: FSMContex
             event_date=event_date,
             wishlist_id=data.get('wishlist_id')
         )
-
         await callback.message.edit_text(
             text=i18n['wishlist_created'].format(title=wishlist.title),
             reply_markup=InlineKeyboardBuilder()

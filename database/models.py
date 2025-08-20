@@ -1,5 +1,6 @@
 import secrets
 import uuid
+from email.policy import default
 
 from sqlalchemy import Column, Integer, String, ForeignKey, DateTime, Float, Text, Enum, Boolean, UUID
 from sqlalchemy.orm import relationship, DeclarativeBase
@@ -8,7 +9,7 @@ from datetime import datetime, UTC
 from enum import Enum as PyEnum
 from sqlalchemy.ext.asyncio import AsyncAttrs, async_sessionmaker, create_async_engine
 
-engine = create_async_engine(url='sqlite+aiosqlite:///db.sqlite3', echo=True)
+engine = create_async_engine(url='sqlite+aiosqlite:///db.sqlite3', echo=False)
 
 async_session = async_sessionmaker(engine)
 
@@ -38,6 +39,7 @@ class User(Base):
     id = Column(Integer, primary_key=True, index=True)
     telegram_id = Column(Integer, unique=True, index=True, nullable=False)
     username = Column(String(50))
+    language = Column(String(5), default='en')
 
     wishlists = relationship("Wishlist", back_populates="owner", cascade="all, delete-orphan")
 

@@ -63,7 +63,7 @@ def wishlist_kb(i18n: dict,
 
 
     builder.button(text=i18n['cancel'], callback_data="cancel")
-    if title and is_private:
+    if title and is_private is not None:
         builder.button(
             text=i18n['confirm'],
             callback_data="confirm"

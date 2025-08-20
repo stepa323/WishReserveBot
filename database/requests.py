@@ -5,7 +5,7 @@ from typing import Optional, Union
 from sqlalchemy import select, func, update
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import selectinload, joinedload
-from database.models import User, Wishlist, async_session, Item, WishlistSubscription
+from database.models import User, Wishlist, async_session, Item, WishlistSubscription, SubscriptionStatus
 
 logger = logging.getLogger(__name__)
 
@@ -65,17 +65,6 @@ async def create_or_update_wishlist(
 ) -> Wishlist:
     """
     Create or update wishlist
-    
-    :param username:
-    :param is_private: Wishlist privacy
-    :param wishlist_id: ID existing (None for creating new)
-    :param user_id: ID owner (user.telegram_id)
-    :param title: Wishlist title
-    :param description: Description (optional)
-    :param event_date: Event date (optional)
-    :param with_owner: Upload owners data
-    :param with_items: Upload wishlists items
-    :return: Object Wishlist
     """
     async with async_session() as session:
         query = select(Wishlist)
@@ -90,6 +79,8 @@ async def create_or_update_wishlist(
             wishlist = await session.scalar(query)
 
             if wishlist:
+                wishlist.title = title
+                wishlist.is_private = is_private
                 if description is not None:
                     wishlist.description = description
                 if event_date is not None:
@@ -98,8 +89,8 @@ async def create_or_update_wishlist(
                 await session.refresh(wishlist)
                 return wishlist
 
-        if title is None:
-            raise ValueError("Title is required for new wishlist")
+        if title is None or is_private is None:
+            raise ValueError("Title and is_private is required for new wishlist")
         if username:
             user: User = await get_or_create_user(user_id, username)
         else:
@@ -237,3 +228,114 @@ async def delete_wishlist_db(wishlist_id: int) -> bool:
             logger.error(f"Error deleting wishlist {wishlist_id}: {e}")
             await session.rollback()
             return False
+
+
+async def get_or_create_subscription(
+        subscriber_id: int,
+        wishlist_id: int,
+        wishlist_owner_id: int,
+        status: SubscriptionStatus = SubscriptionStatus.PENDING
+) -> WishlistSubscription:
+    async with async_session() as session:
+        result = await session.execute(
+            select(WishlistSubscription)
+            .where(
+                WishlistSubscription.subscriber_id == subscriber_id,
+                WishlistSubscription.wishlist_id == wishlist_id
+            )
+        )
+        subscription = result.scalar_one_or_none()
+
+        if not subscription:
+            subscription = WishlistSubscription(
+                subscriber_id=subscriber_id,
+                wishlist_id=wishlist_id,
+                wishlist_owner_id=wishlist_owner_id,
+                status=status
+            )
+            session.add(subscription)
+            await session.commit()
+            await session.refresh(subscription)
+
+        return subscription
+
+
+async def get_subscription(subscriber_id: int, wishlist_id: int) -> Optional[WishlistSubscription]:
+    async with async_session() as session:
+        result = await session.execute(
+            select(WishlistSubscription)
+            .where(
+                WishlistSubscription.subscriber_id == subscriber_id,
+                WishlistSubscription.wishlist_id == wishlist_id
+            )
+        )
+        subscription = result.scalar_one_or_none()
+        if subscription:
+            await session.refresh(subscription)
+        return subscription
+
+
+async def update_subscription_status(
+        subscription_id: int,
+        status: SubscriptionStatus
+) -> WishlistSubscription:
+    async with async_session() as session:
+        result = await session.execute(
+            select(WishlistSubscription)
+            .where(WishlistSubscription.id == subscription_id)
+        )
+        subscription = result.scalar_one()
+        subscription.status = status
+        await session.commit()
+        await session.refresh(subscription)
+        return subscription
+
+
+async def delete_subscription(subscription_id: int) -> None:
+    async with async_session() as session:
+        result = await session.execute(
+            select(WishlistSubscription)
+            .where(WishlistSubscription.id == subscription_id)
+        )
+        subscription = result.scalar_one()
+        await session.delete(subscription)
+        await session.commit()
+
+
+async def get_subscription_with_details(subscriber_id: int, wishlist_id: int) -> Optional[WishlistSubscription]:
+    async with async_session() as session:
+        result = await session.execute(
+            select(WishlistSubscription)
+            .options(
+                joinedload(WishlistSubscription.wishlist),
+                joinedload(WishlistSubscription.subscriber)
+            )
+            .where(
+                WishlistSubscription.subscriber_id == subscriber_id,
+                WishlistSubscription.wishlist_id == wishlist_id
+            )
+        )
+        return result.scalar_one_or_none()
+
+
+async def get_subscribers_count(wishlist_id: int) -> int:
+    """Получает количество подписчиков вишлиста"""
+    async with async_session() as session:
+        result = await session.execute(
+            select(func.count(WishlistSubscription.id))
+            .where(
+                WishlistSubscription.wishlist_id == wishlist_id,
+                WishlistSubscription.status == SubscriptionStatus.APPROVED
+            )
+        )
+        return result.scalar() or 0
+
+
+async def get_user_language(user_id: int) -> str:
+    """Получает язык пользователя из базы данных"""
+    async with async_session() as session:
+        result = await session.execute(
+            select(User.language).where(User.telegram_id == user_id)
+        )
+        language = result.scalar_one_or_none()
+        return language or 'ru'  # язык по умолчанию

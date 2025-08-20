@@ -15,6 +15,7 @@ from lexicon.lexicon_ru import LEXICON_RU
 from middlewares.i18n import TranslatorMiddleware
 
 from database.models import async_main
+from middlewares.logging import LoggerMiddleware
 
 logger = logging.getLogger(__name__)
 
@@ -25,6 +26,7 @@ translations = {
 }
 
 async def main():
+    logging.getLogger("aiogram.event").setLevel(logging.WARNING)
     logging.basicConfig(
         level=logging.INFO,
         format='%(filename)s:%(lineno)d #%(levelname)-8s '
@@ -52,6 +54,7 @@ async def main():
     logger.info('Connecting middleware')
 
     dp.update.middleware(TranslatorMiddleware())
+    dp.update.middleware(LoggerMiddleware())
 
     logger.info('Init database')
 

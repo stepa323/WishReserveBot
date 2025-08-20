@@ -110,5 +110,49 @@ Reserve gifts secretly and make their day!''',
     "invalid_title_length": "Title must be between 4 and 50 characters",
     "invalid_description_length": "Description must not exceed 300 characters",
     "access_denied": "⛔ Access denied",
-    "error_occurred": "⚠️ An error occurred"
+    "error_occurred": "⚠️ An error occurred",
+
+    "wishlist_shared_with_you": "👤 @{owner_username} shared a wishlist with you:\n🎁 \"{wishlist_title}\"",
+    "btn_subscribe": "✅ Subscribe",
+    "btn_unsubscribe": "❌ Unsubscribe",
+    "btn_subscription_pending": "⏳ Pending",
+    "subscribed_success": "✅ Successfully subscribed to the wishlist!",
+    "unsubscribed_success": "❌ Unsubscribed from the wishlist",
+    "subscription_request_sent": "📨 Subscription request sent to the owner",
+    "already_subscribed": "✅ You are already subscribed to this wishlist",
+    "not_subscribed": "❌ You are not subscribed to this wishlist",
+    "subscription_pending": "⏳ Subscription request is pending approval",
+    "you_are_subscribed": "✅ You are subscribed to this wishlist",
+    "this_is_your_wishlist": "⭐ This is your wishlist",
+    "reserved_by": "Reserved by",
+    "wishlist_own_access": "This is your wishlist!",
+    "wishlist_private_access": "This is a private wishlist. Request access from the owner",
+    "privacy_status": "Privacy status",
+    "btn_approve": "✅ Approve",
+    "btn_reject": "❌ Reject",
+    "wishlist_new_request": "User @{username} wants to subscribe to your wishlist \"{wishlist_title}\"",
+    "share_link": "Share link",
+
+    "wishlist_template": "🎁 <b>{title}</b>\n\n👤 Created by: @{owner_username}\n🔒 Privacy: {privacy_value}\n🔗 Share link: <code>{share_url}</code>\n\n📝 Description: {description}\n📅 Event date: {event_date}\n📦 Items: {items_count}\n👥 Subscribers: {subscribers_count}\n\n{subscription_status}",    "privacy_private": "🔒 Private",
+    "privacy_public": "🌐 Public",
+
+    "no_description": "no data",
+    "no_event_date": "not specified",
+
+    "subscription_owner": "⭐ This is your wishlist",
+    "subscription_subscribed": "✅ You are subscribed",
+    "subscription_none": "❌ Not subscribed",
+
+    "wishlist_limited_template": "🎁 <b>{title}</b>\n\n👤 Created by: @{owner_username}\n🔒 This is a private wishlist\n\n📝 Description: {description}\n📅 Event date: {event_date}\n\n{subscription_status}",
+
+    "wishlist_private_info": "🔐 This is a private wishlist. Click 'Subscribe' to request access",
+    "subscription_pending_info": "⏳ Your access request is pending owner approval",
+
+    "subscription_approved": "✅ Your access request to wishlist \"{wishlist_title}\" has been approved!",
+    "subscription_rejected": "❌ Your access request to wishlist \"{wishlist_title}\" has been rejected",
+
+    "subscription_approved_owner": "✅ You approved request from @{username}",
+    "subscription_rejected_owner": "❌ You rejected request from @{username}",
+
+    "subscription_not_found": "Subscription request not found",
 }
