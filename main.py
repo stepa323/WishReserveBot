@@ -7,8 +7,10 @@ from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 
 from config.config import Config, load_config
-from handlers import user, wishlists_forms, other
+from handlers import user, wishlists_forms, other, items_forms
 from handlers.admin import admin_router
+
+
 from lexicon.lexicon_en import LEXICON_EN
 from lexicon.lexicon_ru import LEXICON_RU
 
@@ -49,7 +51,9 @@ async def main():
     dp.include_router(user.router)
     dp.include_router(wishlists_forms.router)
     dp.include_router(admin_router)
+    dp.include_router(items_forms.router)
     dp.include_router(other.router)
+
 
     logger.info('Connecting middleware')
 

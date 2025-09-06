@@ -1,21 +1,18 @@
 LEXICON_EN = {
-    '/start': '''🌟 <b>Welcome to WishReserveBot!</b> 🌟
+    'start_message': '''🌟 <b>Welcome to WishReserveBot!</b> 🌟
 
 🎁 Create perfect wish lists for any occasion! 
 🔒 Let friends secretly reserve gifts without spoiling surprises.
 
 Start your gifting journey now! ✨''',
 
-    '/help': '''🆘 <b>Need assistance?</b>
+    'help_message': '''🆘 <b>Need assistance?</b>
 
 Our support team is available 24/7 to help you.''',
-
-    'start_menu': '🏠 Main Menu',
-    'btn_start': '🚀 Begin',
-    'btn_support': '💬 Support',
-    'btn_go_back': '↩ Back',
-    'btn_friends_wishlists': "👯 Friends' Lists",
-    'btn_help': '❓ Help Center',
+    'support_button': '💬 Support',
+    'back_button': '↩ Back',
+    'friends_wishlist_buttons': "👯 Friends' Lists",
+    'help_button': '❓ Help Center',
 
     'my_wishlists_if_none': '''📭 <b>No wishlists yet</b>
 
@@ -54,7 +51,7 @@ Reserve gifts secretly and make their day!''',
     'no_items_in_wishlist': "No items in this wishlist yet",
     'wishlist_not_found': "Wishlist not found",
     'btn_add_item': "➕ Add item",
-    'btn_edit_wishlist': "✏️ Edit",
+    'btn_edit': "✏️ Edit",
     'btn_delete_wishlist': "🗑 Delete",
 
     'admin_welcome': 'Welcome to Admin Panel!',
@@ -74,10 +71,13 @@ Reserve gifts secretly and make their day!''',
     'wishlist_deleted_success': '✅ Wishlist successfully deleted',
 
     # Wishlist interface elements
-    "title_button": "✏️ Title: {title}",
-    "privacy_button": "🔒 Privacy: {status}",
-    "description_button": "📝 Description: {desc}",
-    "date_button": "📅 Date: {date}",
+    "btn_edit_title": "✏️ Title",
+    "btn_edit_description": "✏️ Description",
+    "btn_edit_date": "✏️ Date",
+    "btn_make_private": "🔒 Make private",
+    "btn_make_public": "🌐 Make public",
+    "btn_confirm": "✅ Confirm",
+    "btn_cancel": "❌ Cancel",
     "not_specified": "not specified",
     "private": "private",
     "public": "public",
@@ -133,7 +133,12 @@ Reserve gifts secretly and make their day!''',
     "wishlist_new_request": "User @{username} wants to subscribe to your wishlist \"{wishlist_title}\"",
     "share_link": "Share link",
 
-    "wishlist_template": "🎁 <b>{title}</b>\n\n👤 Created by: @{owner_username}\n🔒 Privacy: {privacy_value}\n🔗 Share link: <code>{share_url}</code>\n\n📝 Description: {description}\n📅 Event date: {event_date}\n📦 Items: {items_count}\n👥 Subscribers: {subscribers_count}\n\n{subscription_status}",    "privacy_private": "🔒 Private",
+    "wishlist_template": "🎁 <b>{title}</b>\n\n👤 Created by: @{owner_username}\n🔒 Privacy: {privacy_value}\n🔗 Share link: <code>{share_url}</code>\n\n📝 Description: {description}\n📅 Event date: {event_date}\n📦 Items: {items_count}\n👥 Subscribers: {subscribers_count}\n\n{subscription_status}",
+    "wishlist_edit_template": "{edit_mode}\n🎁 <b>{title}</b>\n\n🔒 Privacy: {privacy_value}\n\n📝 Description: {description}\n📅 Event date: {event_date}",
+    "edit_wishlist_text": "✏️ You are currently {state} wishlist",
+    "editing": "editing",
+    "creating": "creating",
+    "privacy_private": "🔐 Private",
     "privacy_public": "🌐 Public",
 
     "no_description": "no data",
@@ -143,7 +148,7 @@ Reserve gifts secretly and make their day!''',
     "subscription_subscribed": "✅ You are subscribed",
     "subscription_none": "❌ Not subscribed",
 
-    "wishlist_limited_template": "🎁 <b>{title}</b>\n\n👤 Created by: @{owner_username}\n🔒 This is a private wishlist\n\n📝 Description: {description}\n📅 Event date: {event_date}\n\n{subscription_status}",
+    "wishlist_limited_template": "🎁 <b>{title}</b>\n\n👤 Created by: @{owner_username}\n\n📝 Description: {description}\n📅 Event date: {event_date}\n\n{subscription_status}",
 
     "wishlist_private_info": "🔐 This is a private wishlist. Click 'Subscribe' to request access",
     "subscription_pending_info": "⏳ Your access request is pending owner approval",
@@ -155,4 +160,45 @@ Reserve gifts secretly and make their day!''',
     "subscription_rejected_owner": "❌ You rejected request from @{username}",
 
     "subscription_not_found": "Subscription request not found",
+
+    "item_preview": "🎁 <b>Adding gift:</b>\n\n📝 <b>Name:</b> {name}\n📄 <b>Description:</b> {description}\n🔗 <b>Link:</b> {link}\n💰 <b>Price:</b> {price}\n🎯 <b>Priority:</b> {priority}\n\nSelect field to edit:",
+
+    "btn_edit_name": "✏️ Name",
+    "btn_edit_link": "✏️ Link",
+    "btn_edit_price": "✏️ Price",
+    "btn_edit_priority": "✏️ Priority",
+    "btn_edit_photo": "📸 Photo",
+
+    "enter_item_name": "📝 Enter gift name:",
+    "enter_item_description": "📄 Enter gift description:",
+    "enter_item_link": "🔗 Enter gift link:",
+    "enter_item_price": "💰 Enter gift price:",
+    "select_item_priority": "🎯 Select gift priority:",
+    "send_item_photo": "📸 Send gift photo:",
+    "btn_remove_photo": "🗑️ Remove photo",
+
+    "blank_name_error": "Name can't be blank",
+    "item_name_too_long": "❌ Name is too long (max 50 characters)",
+    "item_description_too_long": "❌ Description is too long (max 300 characters)",
+    "invalid_price": "❌ Invalid price format",
+
+    "item_added_success": "✅ Gift \"{name}\" successfully added!",
+    "item_add_error": "❌ Error adding gift",
+
+    "priority_low": "📉 Low",
+    "priority_medium": "📊 Medium",
+    "priority_high": "📈 High",
+
+    "no_data": "not specified",
+
+    "price": "Price",
+    "priority": "Priority",
+    "link": "Link",
+
+    "btn_reserve": "🎁 Reserve",
+    "btn_reserved": "✅ Reserved",
+    "btn_already_reserved": "⛔ Already reserved",
+
+    "item_updated": "✅ Gift \"{name}\" successfully updated!",
+
 }

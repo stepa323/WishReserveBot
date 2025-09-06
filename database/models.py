@@ -135,7 +135,8 @@ class Item(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     name = Column(String(50), nullable=False)
-    photo_id = Column(Integer, nullable=True)
+    photo_id = Column(String, nullable=True,
+                      default='AgACAgIAAxkBAAIEn2i4ZrM8bV59St8pqdofxRprZaKFAAJA-jEbYUnISfxgYrJ1VxanAQADAgADbQADNgQ')
     link = Column(String(500), nullable=True)
     price = Column(Float, nullable=True)
     description = Column(Text, nullable=True)
@@ -144,6 +145,7 @@ class Item(Base):
         nullable=False,
         default=PriorityLevel.MEDIUM
     )
+    is_reserved = Column(Boolean, default=False)
 
     wishlist_id = Column(Integer, ForeignKey("wishlists.id"), nullable=False)
 

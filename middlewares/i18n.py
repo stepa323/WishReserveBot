@@ -1,27 +1,26 @@
+from typing import Callable, Any, Awaitable
+
 from aiogram import BaseMiddleware
 from aiogram.types import TelegramObject, User
-from typing import Any, Awaitable, Callable
-
-from database.requests import get_user_language
-from handlers.handlers_utils import get_i18n
 
 
 class TranslatorMiddleware(BaseMiddleware):
     async def __call__(
         self,
         handler: Callable[[TelegramObject, dict[str, Any]], Awaitable[Any]],
-        event: TelegramObject,
-        data: dict[str, Any]
+            event: TelegramObject,
+            data: dict[str, Any]
     ) -> Any:
 
         user: User = data.get("event_from_user")
+
         if user is None:
             return await handler(event, data)
 
-        # язык из базы
-        user_lang = await get_user_language(user.id)
+        user_lang = user.language_code
+        translations = data.get("translations")
 
-        translations = data.get("translations", {})
-        data["i18n"] = get_i18n(translations, user_lang)
+        i18n = translations.get(user_lang)
+        data["i18n"] = i18n if i18n else translations[translations['default']]
 
         return await handler(event, data)

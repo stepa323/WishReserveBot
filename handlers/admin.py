@@ -39,7 +39,7 @@ async def admin_panel(callback: CallbackQuery, i18n: dict[str, str], state: FSMC
 
 @admin_router.callback_query(IsAdmin, F.data == 'admin_statistic')
 async def admin_statistic(callback: CallbackQuery, i18n: dict[str, str]):
-    keyboard = create_inline_kb(1, i18n, admin='btn_go_back')
+    keyboard = create_inline_kb(1, i18n, admin='back_button')
     await callback.answer()
 
     users_count, wishlists_count, gifts_count = await get_stats()
@@ -58,7 +58,7 @@ async def admin_statistic(callback: CallbackQuery, i18n: dict[str, str]):
 
 @admin_router.callback_query(IsAdmin, F.data == 'admin_newsletter')
 async def admin_newsletter(callback: CallbackQuery, i18n: dict[str, str], state: FSMContext):
-    keyboard = create_inline_kb(1, i18n, admin='btn_go_back')
+    keyboard = create_inline_kb(1, i18n, admin='back_button')
 
     await callback.answer()
 
@@ -115,7 +115,7 @@ async def process_confirm_newsletter(callback: CallbackQuery, state: FSMContext,
         failed=failed
     )
 
-    await callback.message.edit_text(stats_text, reply_markup=create_inline_kb(1, i18n, admin='btn_go_back'))
+    await callback.message.edit_text(stats_text, reply_markup=create_inline_kb(1, i18n, admin='back_button'))
     await state.clear()
 
 

@@ -1,9 +1,11 @@
 from datetime import datetime
 
+from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
-from database.models import SubscriptionStatus, Wishlist, User
+from database.models import SubscriptionStatus, Wishlist, User, Item, PriorityLevel
 from database.requests import get_subscription, get_subscribers_count
+from keyboards.keyboard_utils import create_item_keyboard
 
 
 async def validate_date_input(date_str: str) -> str | bool:
@@ -129,3 +131,59 @@ def get_i18n(translations: dict, lang: str):
         lang = default_lang
 
     return translations.get(lang) or translations.get(default_lang) or {}
+
+
+async def send_item_info(message: Message, current_item: int, wishlist: Wishlist, i18n: dict, is_owner: bool,
+                         new_msg: bool):
+    item = wishlist.items[current_item - 1]
+
+    item_text = await render_item_template(item, i18n, current_item, len(wishlist.items))
+    photo_id = item.photo_id
+
+    keyboard = create_item_keyboard(item, i18n, current_item, len(wishlist.items),
+                                    is_owner)
+    if not new_msg:
+        from aiogram.types import InputMediaPhoto
+
+        media = InputMediaPhoto(
+            media=photo_id,
+            caption=item_text,
+        )
+
+        await message.edit_media(
+            media=media,
+            reply_markup=keyboard
+        )
+    else:
+        msg = await message.answer_photo(
+            photo=photo_id,
+            caption=item_text,
+            reply_markup=keyboard,
+        )
+
+        return msg
+
+async def render_item_template(item: Item, i18n: dict, current: int, total: int) -> str:
+    """Рендерит шаблон подарка"""
+    priority_emoji = {
+        PriorityLevel.HIGH: "🔴",
+        PriorityLevel.MEDIUM: "🟡",
+        PriorityLevel.LOW: "🟢"
+    }
+
+    return f"{priority_emoji.get(item.priority_level, '🎁')} <b>{item.name}</b>\n\n" \
+           f"📄 {i18n['description']}: {item.description or i18n['no_description']}\n" \
+           f"💰 {i18n['price']}: {item.price or i18n['no_data']}\n" \
+           f"🎯 {i18n['priority']}: {i18n[f'priority_{item.priority_level.value}']}\n" \
+           f"🔗 {i18n['link']}: {item.link or i18n['no_data']}\n\n" \
+           f"📦 {current}/{total}"
+
+
+async def delete_item_message(state: FSMContext):
+    data = await state.get_data()
+    item_msg = data.get('item_msg')
+    if item_msg:
+        try:
+            await item_msg.delete()
+        except Exception:
+            pass

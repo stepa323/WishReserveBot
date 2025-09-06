@@ -5,7 +5,7 @@ from typing import Optional, Union
 from sqlalchemy import select, func, update
 from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import selectinload, joinedload
-from database.models import User, Wishlist, async_session, Item, WishlistSubscription, SubscriptionStatus
+from database.models import User, Wishlist, async_session, Item, WishlistSubscription, SubscriptionStatus, PriorityLevel
 
 logger = logging.getLogger(__name__)
 
@@ -339,3 +339,64 @@ async def get_user_language(user_id: int) -> str:
         )
         language = result.scalar_one_or_none()
         return language or 'ru'  # язык по умолчанию
+
+
+async def create_or_update_item(
+        *,
+        item_id: Optional[int] = None,
+        wishlist_id: int,
+        name: str,
+        description: Optional[str] = None,
+        link: Optional[str] = None,
+        price: Optional[float] = None,
+        priority: PriorityLevel = PriorityLevel.MEDIUM,
+        photo_id: Optional[str] = None
+) -> Item:
+    """
+    Создает или обновляет подарок
+    """
+    async with async_session() as session:
+        if item_id:
+            # Обновление существующего подарка
+            result = await session.execute(
+                select(Item).where(Item.id == item_id)
+            )
+            item = result.scalar_one()
+
+            item.name = name
+            item.description = description
+            item.link = link
+            item.price = price
+            item.priority_level = priority
+            if photo_id:
+                item.photo_id = photo_id
+        else:
+            # Создание нового подарка
+            item = Item(
+                wishlist_id=wishlist_id,
+                name=name,
+                description=description,
+                link=link,
+                price=price,
+                priority_level=priority,
+                photo_id=photo_id
+            )
+            session.add(item)
+
+        await session.commit()
+        await session.refresh(item)
+        return item
+
+
+async def get_item(item_id: int, with_wishlist: bool = False) -> Optional[Item]:
+    """Получает подарок по ID"""
+    async with async_session() as session:
+        query = select(Item)
+
+        if with_wishlist:
+            query = query.options(joinedload(Item.wishlist))
+
+        result = await session.execute(
+            query.where(Item.id == item_id)
+        )
+        return result.scalar_one_or_none()

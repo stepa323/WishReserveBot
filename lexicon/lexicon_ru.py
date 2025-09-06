@@ -1,21 +1,18 @@
 LEXICON_RU = {
-    '/start': '''🌟 <b>Добро пожаловать в WishReserveBot!</b> 🌟
+    'start_message': '''🌟 <b>Добро пожаловать в WishReserveBot!</b> 🌟
 
 🎁 Создавайте списки желаний для любых событий!
 🔒 Друзья смогут незаметно бронировать подарки.
 
 Начните прямо сейчас! ✨''',
 
-    '/help': '''🆘 <b>Нужна помощь?</b>
+    'help_message': '''🆘 <b>Нужна помощь?</b>
 
 Наша поддержка работает круглосуточно.''',
-
-    'start_menu': '🏠 Главное меню',
-    'btn_start': '🚀 Начать',
-    'btn_support': '💬 Поддержка',
-    'btn_go_back': '↩ Назад',
-    'btn_friends_wishlists': "👯 Списки желаний друзей",
-    'btn_help': '❓ Помощь',
+    'support_button': '💬 Поддержка',
+    'back_button': '↩ Назад',
+    'friends_wishlist_buttons': "👯 Списки желаний друзей",
+    'help_button': '❓ Помощь',
 
     'my_wishlists_if_none': '''📭 <b>Списков пока нет</b>
 
@@ -74,10 +71,13 @@ LEXICON_RU = {
     'wishlist_deleted_success': '✅ Вишлист успешно удален',
 
     # Элементы интерфейса вишлиста
-    "title_button": "✏️ Название: {title}",
-    "privacy_button": "🔒 Приватность: {status}",
-    "description_button": "📝 Описание: {desc}",
-    "date_button": "📅 Дата: {date}",
+    "btn_edit_title": "✏️ Название",
+    "btn_edit_description": "✏️ Описание",
+    "btn_edit_date": "✏️ Дата",
+    "btn_make_private": "🔒 Сделать приватным",
+    "btn_make_public": "🌐 Сделать публичным",
+    "btn_confirm": "✅ Готово",
+    "btn_cancel": "❌ Отмена",
     "not_specified": "не указано",
     "private": "приватный",
     "public": "публичный",
@@ -144,7 +144,7 @@ LEXICON_RU = {
     "subscription_subscribed": "✅ Вы подписаны",
     "subscription_none": "❌ Не подписаны",
 
-    "wishlist_limited_template": "🎁 <b>{title}</b>\n\n👤 Создатель: @{owner_username}\n🔒 Это приватный вишлист\n\n📝 Описание: {description}\n📅 Дата события: {event_date}\n\n{subscription_status}",
+    "wishlist_limited_template": "🎁 <b>{title}</b>\n\n👤 Создатель: @{owner_username}\n\n📝 Описание: {description}\n📅 Дата события: {event_date}\n\n{subscription_status}",
 
     "wishlist_private_info": "🔐 Это приватный вишлист. Нажмите 'Подписаться' чтобы запросить доступ",
     "subscription_pending_info": "⏳ Ваш запрос на доступ ожидает одобрения владельцем",
@@ -155,4 +155,45 @@ LEXICON_RU = {
     "subscription_rejected_owner": "❌ Вы отклонили запрос от @{username}",
 
     "subscription_not_found": "Запрос на подписку не найден",
+
+    "item_preview": "🎁 <b>Добавление подарка:</b>\n\n📝 <b>Название:</b> {name}\n📄 <b>Описание:</b> {description}\n🔗 <b>Ссылка:</b> {link}\n💰 <b>Цена:</b> {price}\n🎯 <b>Приоритет:</b> {priority}\n\nВыберите поле для редактирования:",
+    "btn_edit_name": "✏️ Название",
+    "btn_edit_link": "✏️ Ссылка",
+    "btn_edit_price": "✏️ Цена",
+    "btn_edit_priority": "✏️ Приоритет",
+    "btn_edit_photo": "📸 Фото",
+
+    "enter_item_name": "📝 Введите название подарка:",
+    "enter_item_description": "📄 Введите описание подарка:",
+    "enter_item_link": "🔗 Введите ссылку на подарок:",
+    "enter_item_price": "💰 Введите цену подарка:",
+    "select_item_priority": "🎯 Выберите приоритет подарка:",
+    "send_item_photo": "📸 Отправьте фото подарка:",
+    "btn_remove_photo": "🗑️ Удалить фото",
+
+    "blank_name_error": "Название не может быть пустым",
+    "item_name_too_long": "❌ Название слишком длинное (макс. 50 символов)",
+    "item_description_too_long": "❌ Описание слишком длинное (макс. 300 символов)",
+    "invalid_price": "❌ Неверный формат цены",
+
+    "item_added_success": "✅ Подарок \"{name}\" успешно добавлен!",
+    "item_add_error": "❌ Ошибка при добавлении подарка",
+
+    "priority_low": "📉 Низкий",
+    "priority_medium": "📊 Средний",
+    "priority_high": "📈 Высокий",
+
+    "no_data": "не указано",
+
+    "price": "Цена",
+    "priority": "Приоритет",
+    "link": "Ссылка",
+
+
+    "btn_reserve": "🎁 Забронировать",
+    "btn_reserved": "✅ Забронировано",
+    "btn_already_reserved": "⛔ Уже забронировано",
+
+    "item_updated": "✅ Подарок \"{name}\" успешно обновлен!",
+
 }
